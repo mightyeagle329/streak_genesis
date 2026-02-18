@@ -16,6 +16,9 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
   const [step, setStep] = useState<"email" | "verify">("email");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  
+  // 🧪 TESTING: Always use test wallet
+  const TEST_WALLET = "0x6a72f61820b26b1fe4d956e17b6dc2a1ea3033ee";
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,10 +84,11 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
       const requestBody = {
         email: email.trim(),
         code: verificationCode,
-        wallet_address: profile.wallet_address.toLowerCase(),
+        wallet_address: TEST_WALLET.toLowerCase(), // Use test wallet
       };
 
       console.log("📤 Confirming verification code to:", apiEndpoint);
+      console.log("🧪 Using test wallet:", TEST_WALLET);
       console.log("📤 Request body:", requestBody);
 
       const response = await fetch(apiEndpoint, {
