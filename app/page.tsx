@@ -69,42 +69,33 @@ export default function Home() {
 
   const handleWalletConnected = async (walletAddress: string) => {
     try {
-      setError(null); // Clear any previous errors
+      setError(null);
       
-      // Check if user already exists in database
-      const checkResponse = await fetch(`/api/profile?wallet=${walletAddress.toLowerCase()}`);
-      
-      if (checkResponse.ok) {
-        const existingProfile = await checkResponse.json();
-        
-        // Route based on existing state
-        if (existingProfile.email) {
-          // User is complete, go straight to dashboard
-          setUserProfile(existingProfile);
-          setCurrentStep("dashboard");
-        } else {
-          // User exists but no email, go to email gate
-          setUserProfile(existingProfile);
-          setCurrentStep("email");
-        }
-      } else {
-        // New user - start indexing flow
-        setCurrentStep("indexing");
-      }
+      // Since the backend now handles everything, we just go straight to indexing
+      // The backend will return existing profile data if wallet is already registered
+      setCurrentStep("indexing");
     } catch (error) {
-      console.error("Error checking profile:", error);
+      console.error("Error connecting wallet:", error);
       setError("Failed to connect. Please try again.");
-      // On error, stay on landing to allow retry
       setCurrentStep("landing");
     }
   };
 
   const handleIndexingComplete = (profile: UserProfile) => {
     setUserProfile(profile);
-    setCurrentStep("reveal");
+    
+    // If email exists, skip reveal and email verification - go straight to dashboard
+    if (profile.email) {
+      console.log("✅ Email already exists, skipping reveal and verification");
+      setCurrentStep("dashboard");
+    } else {
+      // New user flow - show reveal page
+      setCurrentStep("reveal");
+    }
   };
 
   const handleRevealComplete = () => {
+    // This is for new users only (no email yet)
     setCurrentStep("email");
   };
 

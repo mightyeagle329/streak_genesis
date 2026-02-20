@@ -37,22 +37,39 @@ export function SocialQuest({ profile, onComplete }: SocialQuestProps) {
       return;
     }
 
+    // Basic URL validation
+    const normalizedUrl = tweetUrl.split("?")[0].trim();
+    if (!normalizedUrl.includes("twitter.com") && !normalizedUrl.includes("x.com")) {
+      setError("Please enter a valid Twitter/X URL");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/submit-tweet", {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
+      const response = await fetch(`${backendUrl}/v1/account/genesis/social/tweet`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
         body: JSON.stringify({
-          walletAddress: profile.wallet_address,
-          tweetUrl,
+          wallet_address: profile.wallet_address,
+          tweet_url: normalizedUrl,
         }),
       });
 
       const data = await response.json();
 
-      if (data.success) {
-        onComplete(data.profile);
+      if (response.ok) {
+        const updatedProfile = {
+          ...profile,
+          social_xp: 500,
+          total_xp: profile.genesis_xp + profile.alliance_xp + 500,
+          twitter_shared: true,
+        };
+        onComplete(updatedProfile);
       } else {
         setError(data.error || "Failed to verify tweet");
       }

@@ -43,20 +43,3 @@ export function getAuraDisplay(aura: string): { label: string; color: string; em
   }
 }
 
-export function validateEmail(email: string): boolean {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
-
-export function normalizeEmail(email: string): string {
-  email = email.toLowerCase().trim();
-  
-  // Handle Gmail aliases (remove +alias and dots)
-  if (email.includes("@gmail.com")) {
-    const [local, domain] = email.split("@");
-    const normalized = local.replace(/\+.*/, "").replace(/\./g, "");
-    return `${normalized}@${domain}`;
-  }
-  
-  return email;
-}

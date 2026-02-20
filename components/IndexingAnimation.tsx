@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
+import { useSignMessage } from "wagmi";
 import { UserProfile } from "@/app/page";
 import { generateRefCode } from "@/lib/utils";
 
@@ -27,7 +28,9 @@ export function IndexingAnimation({
 }: IndexingAnimationProps) {
   const [currentMessage, setCurrentMessage] = useState(0);
   const [dots, setDots] = useState("");
+  const [authStep, setAuthStep] = useState<"signing" | "indexing">("signing");
   const hasFetched = useRef(false); // Prevent duplicate API calls
+  const { signMessageAsync } = useSignMessage();
   
   // 🧪 TESTING: Always use test wallet for backend
   const TEST_WALLET = "0x6a72f61820b26b1fe4d956e17b6dc2a1ea3033ee";
@@ -50,26 +53,67 @@ export function IndexingAnimation({
       setCurrentMessage((prev) => (prev + 1) % scanningMessages.length);
     }, 1500);
 
-    // Fetch data from backend API
-    const fetchData = async () => {
+    // Main authentication and data fetching flow
+    const authenticateAndFetch = async () => {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
-        const apiEndpoint = `${backendUrl}/v1/account/genesis`;
+        console.log("\n" + "=".repeat(80));
+        console.log("🔐 WALLET AUTHENTICATION STARTED");
+        console.log("=".repeat(80));
         
+        // Step 1: Generate message to sign
+        const timestamp = Date.now();
+        const nonce = Math.random().toString(36).substring(2, 15);
+        
+        // SIWE-like message format
+        const messageToSign = `Streak Genesis wants you to sign in with your Ethereum account:
+${TEST_WALLET}
+
+By signing this message, you prove ownership of your wallet address.
+
+URI: ${window.location.origin}
+Version: 1
+Chain ID: 137
+Nonce: ${nonce}
+Issued At: ${new Date(timestamp).toISOString()}`;
+
+        console.log("📝 Message to Sign:");
+        console.log(messageToSign);
+        console.log("\n🖊️  Requesting signature from wallet...\n");
+        
+        setAuthStep("signing");
+        
+        // Step 2: Request signature from user's wallet
+        const signature = await signMessageAsync({
+          message: messageToSign,
+        });
+        
+        console.log("✅ Signature received:", signature);
         console.log("\n" + "=".repeat(80));
         console.log("🔍 INDEXING STARTED");
         console.log("=".repeat(80));
+        
+        setAuthStep("indexing");
+        
+        // Step 3: Send authenticated request to backend
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
+        const apiEndpoint = `${backendUrl}/v1/account/genesis`;
+        
         console.log("🧪 TEST MODE: Using test wallet for all requests");
         console.log("📍 Connected Wallet (display only):", walletAddress);
         console.log("🎯 Test Wallet (sent to backend):", TEST_WALLET);
         console.log("🌐 Backend API Endpoint:", apiEndpoint);
         console.log("=".repeat(80) + "\n");
         
+        // Request body with authentication
         const requestBody = {
           wallet_address: TEST_WALLET.toLowerCase(),
+          message: messageToSign,
+          signature: signature,
+          timestamp: timestamp,
+          nonce: nonce,
         };
         
-        console.log("📤 REQUEST #1 - INDEXING VOLUME");
+        console.log("📤 AUTHENTICATED REQUEST - INDEXING VOLUME");
         console.log("Method: POST");
         console.log("Endpoint:", apiEndpoint);
         console.log("Headers:", {
@@ -77,8 +121,7 @@ export function IndexingAnimation({
           "Accept": "application/json",
         });
         console.log("Body (stringified):", JSON.stringify(requestBody, null, 2));
-        console.log("Body (raw object):", requestBody);
-        console.log("\n⏳ Sending request to backend...\n");
+        console.log("\n⏳ Sending authenticated request to backend...\n");
         
         const response = await fetch(apiEndpoint, {
           method: "POST",
@@ -127,22 +170,35 @@ export function IndexingAnimation({
           };
           
           console.log("✅ Profile Created (using test wallet):", profile);
+          
+          // Check if email already exists in backend response
+          if (data.email) {
+            console.log("📧 Email found in response:", data.email);
+            console.log("⏭️  Skipping email verification step");
+          } else {
+            console.log("📧 No email in response - will require verification");
+          }
+          
           onComplete(profile);
         }, 3000);
       } catch (error) {
-        console.error("❌ Error fetching from backend:", error);
-        alert("Failed to fetch profile from backend. Please try again.");
+        console.error("❌ Error during authentication or fetching:", error);
+        if (error instanceof Error && error.message.includes("User rejected")) {
+          alert("Signature request was rejected. Please try again and approve the signature request.");
+        } else {
+          alert("Failed to authenticate or fetch profile. Please try again.");
+        }
       }
     };
 
-    fetchData();
+    authenticateAndFetch();
 
     return () => {
       clearInterval(dotsInterval);
       clearInterval(messageInterval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletAddress, referralCode, onComplete]);
+  }, [walletAddress, referralCode, onComplete, signMessageAsync]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative z-10">
@@ -210,19 +266,32 @@ export function IndexingAnimation({
           ))}
         </div>
 
-        {/* Calculating Text */}
+        {/* Status Text */}
         <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Calculating{dots}
-          </h2>
-          <p className="text-gray-400 text-sm">
-            Analyzing your Polymarket history
-          </p>
+          {authStep === "signing" ? (
+            <>
+              <h2 className="text-3xl font-bold text-white mb-2">
+                Sign Message{dots}
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Please approve the signature request in your wallet
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-3xl font-bold text-white mb-2">
+                Calculating{dots}
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Analyzing your Polymarket history
+              </p>
+            </>
+          )}
         </motion.div>
 
         {/* Epic Progress Bar */}
