@@ -10,12 +10,14 @@ interface VolumeRevealProps {
   onContinue: () => void;
 }
 
+const XP_CAP_VOLUME = 1_000_000; // $1M hard cap per requirement
+
 export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
   const [showDetails, setShowDetails] = useState(false);
   const auraInfo = getAuraDisplay(profile.assigned_aura);
+  const isMaxCapped = profile.polymarket_volume_usd > XP_CAP_VOLUME;
 
   useEffect(() => {
-    // Show details immediately
     setTimeout(() => setShowDetails(true), 500);
   }, []);
 
@@ -35,12 +37,12 @@ export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
             className="text-2xl md:text-3xl text-gray-400 mb-4"
           >
             {profile.user_type === "VETERAN"
-              ? "Your Total Polymarket Volume"
-              : "Polymarket Volume Detected"}
+              ? "Your Total Prediction Apps Volume"
+              : "Prediction Apps Volume Detected"}
           </motion.h2>
 
           <motion.div
-            className="text-6xl md:text-8xl font-bold gradient-gold mb-8"
+            className="text-6xl md:text-8xl font-bold gradient-gold mb-4"
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
@@ -49,6 +51,54 @@ export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
               {formatVolume(profile.polymarket_volume_usd)}
             </motion.span>
           </motion.div>
+
+          {/* MAX CAP REACHED Badge */}
+          {isMaxCapped && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+              className="inline-flex items-center gap-2 mb-6"
+            >
+              <div className="relative px-5 py-2 rounded-full border-2 border-yellow-400 bg-yellow-400/10">
+                {/* Glow effect */}
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-yellow-400/20 blur-md"
+                  animate={{ opacity: [0.4, 0.8, 0.4] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                <span className="relative text-yellow-400 font-black text-sm tracking-widest uppercase flex items-center gap-2">
+                  <motion.span
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    🏆
+                  </motion.span>
+                  MAX CAP REACHED
+                  <motion.span
+                    animate={{ rotate: [0, -10, 10, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    🏆
+                  </motion.span>
+                </span>
+              </div>
+            </motion.div>
+          )}
+
+          {/* XP cap explanation for capped users */}
+          {isMaxCapped && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-sm text-gray-500 mb-4"
+            >
+              XP calculated on first{" "}
+              <span className="text-yellow-400 font-semibold">$1,000,000</span>{" "}
+              · Your full volume is displayed for prestige
+            </motion.p>
+          )}
         </div>
 
         {/* Profile Type Message */}
@@ -63,7 +113,7 @@ export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
                 🌟 Welcome, Challenger!
               </h3>
               <p className="text-gray-300 text-lg">
-                No Polymarket history? Perfect. You skipped the legacy platforms.
+                No Prediction Apps history? Perfect. You skipped the legacy platforms.
                 <br />
                 <span className="text-orange-400 font-semibold">
                   Welcome to the revolution.

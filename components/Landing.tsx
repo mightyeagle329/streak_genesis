@@ -41,7 +41,7 @@ export function Landing({ referralCode }: LandingProps) {
         >
           <h2 className="text-3xl md:text-5xl font-bold text-white leading-tight">
             You traded <span className="text-orange-500">millions</span> on
-            Polymarket
+            Prediction Apps
             <br />
             and got <span className="text-red-500">nothing</span>.
           </h2>
@@ -94,7 +94,7 @@ export function Landing({ referralCode }: LandingProps) {
           transition={{ delay: 0.8 }}
           className="text-sm text-gray-500 max-w-xl mx-auto"
         >
-          No Polymarket history? Perfect. You skipped the legacy platforms.
+                No Prediction Apps history? Perfect. You skipped the legacy platforms.
           <br />
           <span className="text-orange-400 font-semibold">
             Welcome to the revolution, Challenger.

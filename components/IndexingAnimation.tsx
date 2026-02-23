@@ -6,10 +6,21 @@ import { useSignMessage } from "wagmi";
 import { UserProfile } from "@/app/page";
 import { generateRefCode } from "@/lib/utils";
 
+// Keywords used to detect a Sybil rejection from the backend error body.
+// Adjust these once the backend developer confirms the exact error format.
+const SYBIL_KEYWORDS = ["sybil", "wallet_too_new", "wallet too new", "insufficient gas", "not_eligible", "not eligible"];
+
+function isSybilError(status: number, errorText: string): boolean {
+  if (status === 403) return true;
+  const lower = errorText.toLowerCase();
+  return SYBIL_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
 interface IndexingAnimationProps {
   walletAddress: string;
   referralCode: string | null;
   onComplete: (profile: UserProfile) => void;
+  onSybilRejected?: (reason?: string) => void;
 }
 
 const scanningMessages = [
@@ -25,6 +36,7 @@ export function IndexingAnimation({
   walletAddress,
   referralCode,
   onComplete,
+  onSybilRejected,
 }: IndexingAnimationProps) {
   const [currentMessage, setCurrentMessage] = useState(0);
   const [dots, setDots] = useState("");
@@ -141,6 +153,22 @@ Issued At: ${new Date(timestamp).toISOString()}`;
           console.error("❌ ERROR RESPONSE");
           console.error("Status:", response.status);
           console.error("Error Body:", errorText);
+
+          if (isSybilError(response.status, errorText)) {
+            console.warn("🛡️ Sybil rejection detected — routing to blocked screen");
+            // Try to extract a human-readable reason from the JSON body
+            let reason: string | undefined;
+            try {
+              const parsed = JSON.parse(errorText);
+              reason = parsed.error || parsed.message || parsed.reason;
+            } catch {
+              // plain text response
+              reason = errorText || undefined;
+            }
+            onSybilRejected?.(reason);
+            return;
+          }
+
           throw new Error(`Backend returned ${response.status}: ${errorText}`);
         }
 
@@ -185,6 +213,14 @@ Issued At: ${new Date(timestamp).toISOString()}`;
         console.error("❌ Error during authentication or fetching:", error);
         if (error instanceof Error && error.message.includes("User rejected")) {
           alert("Signature request was rejected. Please try again and approve the signature request.");
+        } else if (error instanceof Error) {
+          // Check if the thrown error message itself is sybil-related
+          if (isSybilError(0, error.message)) {
+            console.warn("🛡️ Sybil rejection detected in thrown error");
+            onSybilRejected?.(error.message);
+          } else {
+            alert("Failed to authenticate or fetch profile. Please try again.");
+          }
         } else {
           alert("Failed to authenticate or fetch profile. Please try again.");
         }
@@ -288,7 +324,7 @@ Issued At: ${new Date(timestamp).toISOString()}`;
                 Calculating{dots}
               </h2>
               <p className="text-gray-400 text-sm">
-                Analyzing your Polymarket history
+                Analyzing your Prediction Apps history
               </p>
             </>
           )}

@@ -7,16 +7,16 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Streak Genesis - Vampire Attack",
-  description: "You traded millions on Polymarket and got nothing. Claim your Streak XP.",
+  description: "You traded millions on Prediction Apps and got nothing. Claim your Streak XP.",
   openGraph: {
     title: "Streak Genesis - Vampire Attack",
-    description: "Claim your Streak XP for past Polymarket volume",
+    description: "Claim your Streak XP for past Prediction Apps volume",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Streak Genesis - Vampire Attack",
-    description: "Claim your Streak XP for past Polymarket volume",
+    description: "Claim your Streak XP for past Prediction Apps volume",
   },
 };
 

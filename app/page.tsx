@@ -7,6 +7,7 @@ import { IndexingAnimation } from "@/components/IndexingAnimation";
 import { VolumeReveal } from "@/components/VolumeReveal";
 import { EmailGate } from "@/components/EmailGate";
 import { Dashboard } from "@/components/Dashboard";
+import { SybilRejection } from "@/components/SybilRejection";
 import { BackgroundEffects } from "@/components/BackgroundEffects";
 import { WalletButton } from "@/components/WalletButton";
 
@@ -27,7 +28,7 @@ export type UserProfile = {
   email?: string;
 };
 
-export type FlowStep = "landing" | "indexing" | "reveal" | "email" | "dashboard";
+export type FlowStep = "landing" | "indexing" | "reveal" | "email" | "dashboard" | "sybil";
 
 export default function Home() {
   const { address, isConnected } = useAccount();
@@ -35,6 +36,7 @@ export default function Home() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sybilReason, setSybilReason] = useState<string | undefined>(undefined);
 
   // CRITICAL: Capture referral code on mount
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function Home() {
     if (!isConnected && currentStep !== "landing") {
       setCurrentStep("landing");
       setUserProfile(null);
+      setSybilReason(undefined);
     }
   }, [isConnected, address, currentStep]);
 
@@ -79,6 +82,11 @@ export default function Home() {
       setError("Failed to connect. Please try again.");
       setCurrentStep("landing");
     }
+  };
+
+  const handleSybilRejected = (reason?: string) => {
+    setSybilReason(reason);
+    setCurrentStep("sybil");
   };
 
   const handleIndexingComplete = (profile: UserProfile) => {
@@ -147,8 +155,13 @@ export default function Home() {
         <IndexingAnimation 
           walletAddress={address} 
           referralCode={referralCode}
-          onComplete={handleIndexingComplete} 
+          onComplete={handleIndexingComplete}
+          onSybilRejected={handleSybilRejected}
         />
+      )}
+
+      {currentStep === "sybil" && (
+        <SybilRejection reason={sybilReason} />
       )}
       
       {currentStep === "reveal" && userProfile && (

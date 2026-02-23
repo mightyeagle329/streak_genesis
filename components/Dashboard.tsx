@@ -13,9 +13,12 @@ interface DashboardProps {
   profile: UserProfile;
 }
 
+const XP_CAP_VOLUME = 1_000_000;
+
 export function Dashboard({ profile }: DashboardProps) {
   const [currentProfile, setCurrentProfile] = useState(profile);
   const auraInfo = getAuraDisplay(currentProfile.assigned_aura);
+  const isMaxCapped = currentProfile.polymarket_volume_usd > XP_CAP_VOLUME;
 
   const handleSocialComplete = (updatedProfile: UserProfile) => {
     setCurrentProfile(updatedProfile);
@@ -62,10 +65,36 @@ export function Dashboard({ profile }: DashboardProps) {
           >
             {/* Volume */}
             <div className="bg-black/80 border-2 border-gray-800 rounded-xl p-6">
-              <div className="text-sm text-gray-400 mb-2">Polymarket Volume</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-400">Prediction Apps Volume</div>
+                {isMaxCapped && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                    className="relative px-3 py-1 rounded-full border border-yellow-400 bg-yellow-400/10"
+                  >
+                    <motion.div
+                      className="absolute inset-0 rounded-full bg-yellow-400/20 blur-sm"
+                      animate={{ opacity: [0.3, 0.7, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <span className="relative text-yellow-400 font-black text-xs tracking-widest uppercase">
+                      🏆 MAX CAP
+                    </span>
+                  </motion.div>
+                )}
+              </div>
               <div className="text-3xl font-bold text-orange-400">
                 {formatVolume(currentProfile.polymarket_volume_usd)}
               </div>
+              {isMaxCapped && (
+                <p className="text-xs text-gray-500 mt-2">
+                  XP capped at{" "}
+                  <span className="text-yellow-400 font-semibold">$1,000,000</span>
+                  {" "}· Volume shown for prestige only
+                </p>
+              )}
             </div>
 
             {/* XP Breakdown */}
