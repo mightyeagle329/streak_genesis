@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Custom fonts ─────────────────────────────────────────────────── */
+/* Drop Nekst-Bold.woff2 (and optionally Nekst-Bold.woff) into        */
+/* public/fonts/ and this @font-face will pick it up automatically.   */
+@font-face {
+  font-family: "Nekst";
+  src:
+    url("/fonts/Nekst%20Bold.woff2") format("woff2"),
+    url("/fonts/Nekst%20Bold.woff")  format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #000000;
   --foreground: #ffffff;
@@ -60,6 +73,95 @@ body {
     border: 3px solid rgba(234, 179, 8, 1);
     animation: glow-pulse 2s ease-in-out infinite;
   }
+}
+
+/* ── Genesis CTA Button ───────────────────────────────────────────── */
+@property --btn-border-angle {
+  syntax: "<angle>";
+  initial-value: 90.82deg;
+  inherits: false;
+}
+
+.genesis-btn {
+  position: relative;
+  height: 49px;
+  min-width: 277px;
+  border-radius: 60px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0 2.25rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18.4px);
+  -webkit-backdrop-filter: blur(18.4px);
+  white-space: nowrap;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  z-index: 0;
+}
+
+.genesis-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 60px;
+  padding: 1.5px;
+  background: linear-gradient(
+    var(--btn-border-angle),
+    #ffffff,
+    rgba(255, 255, 255, 0.1),
+    #ffffff
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: btn-border-rotate 4s linear infinite;
+}
+
+@keyframes btn-border-rotate {
+  to {
+    --btn-border-angle: 450.82deg;
+  }
+}
+
+.genesis-btn:hover {
+  opacity: 0.88;
+  transform: scale(1.025);
+}
+
+.genesis-btn:active {
+  transform: scale(0.96);
+}
+
+
+/* ── Background lightning image ─────────────────────────────────────────── */
+/* width:  ~1400px @ 1440px viewport → ~1900px @ 390px viewport (grows)    */
+/* height: ~829px  @ 1440px viewport → ~400px  @ 390px viewport (shrinks)  */
+.bg-lightning {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* override Tailwind's img { max-width: 100% } so the image can exceed viewport width */
+  max-width: none;
+  width: clamp(1543.62px, calc(-24vw + 1590px), 1600px);
+  height: clamp(650px, calc(41vw + 300px), 829.08px);
+  transform-origin: center center;
+  transform: translate(-50%, -50%) rotate(-40deg);
+  opacity: 0.6;
+  mix-blend-mode: lighten;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
 }
 
 /* Scrollbar Styling */

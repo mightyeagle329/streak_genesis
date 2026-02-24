@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, IBM_Plex_Sans_Condensed } from "next/font/google";
 import "./globals.css";
 import { Web3Provider } from "@/lib/web3-provider";
 
 const inter = Inter({ subsets: ["latin"] });
+
+const ibmCondensed = IBM_Plex_Sans_Condensed({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-ibm-condensed",
+});
 
 export const metadata: Metadata = {
   title: "Streak Genesis - Vampire Attack",
@@ -26,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={ibmCondensed.variable}>
       <body className={inter.className}>
         <Web3Provider>{children}</Web3Provider>
       </body>

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { UserProfile } from "@/app/page";
-import { validateEmail } from "@/lib/utils";
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 interface EmailGateProps {
   profile: UserProfile;
@@ -25,7 +25,7 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
     setError("");
 
     // Validate email
-    if (!validateEmail(email)) {
+    if (!isValidEmail(email)) {
       setError("Please enter a valid email address");
       return;
     }
