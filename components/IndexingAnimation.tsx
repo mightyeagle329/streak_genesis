@@ -41,42 +41,30 @@ export function IndexingAnimation({
   const [currentMessage, setCurrentMessage] = useState(0);
   const [dots, setDots] = useState("");
   const [authStep, setAuthStep] = useState<"signing" | "indexing">("signing");
-  const hasFetched = useRef(false); // Prevent duplicate API calls
+
+  // Keep latest callbacks in a ref so the effect doesn't re-run when they change
+  const onCompleteRef = useRef(onComplete);
+  const onSybilRejectedRef = useRef(onSybilRejected);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  useEffect(() => { onSybilRejectedRef.current = onSybilRejected; }, [onSybilRejected]);
+
   const { signMessageAsync } = useSignMessage();
-  
+
   // 🧪 TESTING: Always use test wallet for backend
   const TEST_WALLET = "0x6a72f61820b26b1fe4d956e17b6dc2a1ea3033ee";
 
   useEffect(() => {
-    // Skip if already fetched
-    if (hasFetched.current) {
-      console.log("🚫 Skipping duplicate request - already fetched");
-      return;
-    }
-    hasFetched.current = true;
-    
-    // Animate loading dots
     const dotsInterval = setInterval(() => {
       setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
     }, 500);
-
-    // Cycle through messages
     const messageInterval = setInterval(() => {
       setCurrentMessage((prev) => (prev + 1) % scanningMessages.length);
     }, 1500);
 
-    // Main authentication and data fetching flow
     const authenticateAndFetch = async () => {
       try {
-        console.log("\n" + "=".repeat(80));
-        console.log("🔐 WALLET AUTHENTICATION STARTED");
-        console.log("=".repeat(80));
-        
-        // Step 1: Generate message to sign
         const timestamp = Date.now();
         const nonce = Math.random().toString(36).substring(2, 15);
-        
-        // SIWE-like message format
         const messageToSign = `Streak Genesis wants you to sign in with your Ethereum account:
 ${TEST_WALLET}
 
@@ -88,100 +76,37 @@ Chain ID: 137
 Nonce: ${nonce}
 Issued At: ${new Date(timestamp).toISOString()}`;
 
-        console.log("📝 Message to Sign:");
-        console.log(messageToSign);
-        console.log("\n🖊️  Requesting signature from wallet...\n");
-        
         setAuthStep("signing");
-        
-        // Step 2: Request signature from user's wallet
-        const signature = await signMessageAsync({
-          message: messageToSign,
-        });
-        
-        console.log("✅ Signature received:", signature);
-        console.log("\n" + "=".repeat(80));
-        console.log("🔍 INDEXING STARTED");
-        console.log("=".repeat(80));
-        
+        const signature = await signMessageAsync({ message: messageToSign });
         setAuthStep("indexing");
-        
-        // Step 3: Send authenticated request to backend
+
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
-        const apiEndpoint = `${backendUrl}/v1/account/genesis`;
-        
-        console.log("🧪 TEST MODE: Using test wallet for all requests");
-        console.log("📍 Connected Wallet (display only):", walletAddress);
-        console.log("🎯 Test Wallet (sent to backend):", TEST_WALLET);
-        console.log("🌐 Backend API Endpoint:", apiEndpoint);
-        console.log("=".repeat(80) + "\n");
-        
-        // Request body with authentication
-        const requestBody = {
-          wallet_address: TEST_WALLET.toLowerCase(),
-          message: messageToSign,
-          signature: signature,
-          timestamp: timestamp,
-          nonce: nonce,
-        };
-        
-        console.log("📤 AUTHENTICATED REQUEST - INDEXING VOLUME");
-        console.log("Method: POST");
-        console.log("Endpoint:", apiEndpoint);
-        console.log("Headers:", {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        });
-        console.log("Body (stringified):", JSON.stringify(requestBody, null, 2));
-        console.log("\n⏳ Sending authenticated request to backend...\n");
-        
-        const response = await fetch(apiEndpoint, {
+        const requestBody = { wallet_address: TEST_WALLET.toLowerCase(), message: messageToSign, signature, timestamp, nonce };
+        console.log("📤 REQUEST:", JSON.stringify(requestBody, null, 2));
+
+        const response = await fetch(`${backendUrl}/v1/account/genesis`, {
           method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-          },
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
           body: JSON.stringify(requestBody),
         });
-        
-        console.log("📥 RESPONSE RECEIVED");
-        console.log("Status Code:", response.status);
-        console.log("Status Text:", response.statusText);
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("❌ ERROR RESPONSE");
-          console.error("Status:", response.status);
-          console.error("Error Body:", errorText);
-
           if (isSybilError(response.status, errorText)) {
-            console.warn("🛡️ Sybil rejection detected — routing to blocked screen");
-            // Try to extract a human-readable reason from the JSON body
             let reason: string | undefined;
-            try {
-              const parsed = JSON.parse(errorText);
-              reason = parsed.error || parsed.message || parsed.reason;
-            } catch {
-              // plain text response
-              reason = errorText || undefined;
-            }
-            onSybilRejected?.(reason);
+            try { reason = JSON.parse(errorText).error || JSON.parse(errorText).message; } catch { reason = errorText; }
+            onSybilRejectedRef.current?.(reason);
             return;
           }
-
           throw new Error(`Backend returned ${response.status}: ${errorText}`);
         }
 
         const data = await response.json();
-        console.log("\n📊 SUCCESS - Backend Response Data:");
-        console.log(JSON.stringify(data, null, 2));
-        console.log("\n" + "=".repeat(80) + "\n");
+        console.log("📊 Response:", JSON.stringify(data, null, 2));
 
-        // Wait for dramatic effect
         setTimeout(() => {
-          // Use test wallet data
-          const profile: UserProfile = {
-            wallet_address: TEST_WALLET.toLowerCase(), // Use test wallet everywhere
+          onCompleteRef.current({
+            wallet_address: TEST_WALLET.toLowerCase(),
             user_type: data.user_type || "CHALLENGER",
             polymarket_volume_usd: data.polymarket_volume_usd || 0,
             genesis_xp: data.genesis_xp || 1000,
@@ -195,29 +120,18 @@ Issued At: ${new Date(timestamp).toISOString()}`;
             twitter_shared: data.twitter_shared || false,
             invited_by: referralCode || undefined,
             email: data.email,
-          };
-          
-          console.log("✅ Profile Created (using test wallet):", profile);
-          
-          // Check if email already exists in backend response
-          if (data.email) {
-            console.log("📧 Email found in response:", data.email);
-            console.log("⏭️  Skipping email verification step");
-          } else {
-            console.log("📧 No email in response - will require verification");
-          }
-          
-          onComplete(profile);
+          });
         }, 3000);
       } catch (error) {
-        console.error("❌ Error during authentication or fetching:", error);
-        if (error instanceof Error && error.message.includes("User rejected")) {
-          alert("Signature request was rejected. Please try again and approve the signature request.");
-        } else if (error instanceof Error) {
-          // Check if the thrown error message itself is sybil-related
-          if (isSybilError(0, error.message)) {
-            console.warn("🛡️ Sybil rejection detected in thrown error");
-            onSybilRejected?.(error.message);
+        if (error instanceof Error) {
+          const msg = error.message.toLowerCase();
+          if (msg.includes("proposal expired") || msg.includes("session proposal") || msg.includes("pairing expired")) {
+            // WalletConnect proposal timed out — ask user to reconnect
+            alert("Wallet connection timed out. Please disconnect and reconnect your wallet to try again.");
+          } else if (msg.includes("user rejected") || msg.includes("user denied")) {
+            alert("Signature request was rejected. Please approve the signature request in your wallet.");
+          } else if (isSybilError(0, error.message)) {
+            onSybilRejectedRef.current?.(error.message);
           } else {
             alert("Failed to authenticate or fetch profile. Please try again.");
           }
@@ -228,172 +142,208 @@ Issued At: ${new Date(timestamp).toISOString()}`;
     };
 
     authenticateAndFetch();
+    return () => { clearInterval(dotsInterval); clearInterval(messageInterval); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walletAddress, referralCode]);
 
-    return () => {
-      clearInterval(dotsInterval);
-      clearInterval(messageInterval);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletAddress, referralCode, onComplete, signMessageAsync]);
+  const IBM = "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif";
+  const shortTarget = `${TEST_WALLET.slice(0, 8)}... ${TEST_WALLET.slice(-4)}`;
+  const statusText = authStep === "signing"
+    ? `Waiting for wallet signature${dots}`
+    : `${scanningMessages[currentMessage]}${dots}`;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative z-10">
+    <div className="min-h-screen relative flex flex-col items-center justify-center px-4">
+
+      {/* Blurred background */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/bg.png"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            maxWidth: "none",
+            width: 1243.62,
+            height: 829.08,
+            transform: "translate(-50%, -50%) rotate(-40deg)",
+            opacity: 0.8,
+            mixBlendMode: "lighten",
+            filter: "blur(72px)",
+          }}
+        />
+        <div className="absolute inset-0" style={{ background: "rgba(10,11,16,0.55)" }} />
+      </div>
+
+      {/* Logo — top-left, same as Landing page */}
+      <div className="absolute top-0 left-0 z-10" style={{ paddingTop: 28, paddingLeft: 36, display: "flex", alignItems: "center" }}>
+        <div style={{ width: 17, height: 17, borderRadius: "50%", background: "#FFFFFF", border: "1px solid #0F0D3F", flexShrink: 0 }} />
+        <div style={{ width: 17, height: 17, borderRadius: "50%", background: "#FFFFFF", border: "1px solid #0F0D3F", flexShrink: 0, marginLeft: -8 }} />
+        <span style={{
+          marginLeft: 9,
+          fontFamily: "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif",
+          fontWeight: 400,
+          fontSize: 23,
+          lineHeight: "26px",
+          color: "#FFFFFF",
+          whiteSpace: "nowrap",
+        }}>
+          STREAK
+        </span>
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col items-center gap-8"
+        className="relative z-10 flex flex-col items-center"
       >
-        {/* Spinning Circle with SYNC */}
-        <div className="relative">
-          {/* Outer glow */}
-          <motion.div
-            className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 blur-2xl opacity-40"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          />
-          
-          {/* Spinning ring */}
-          <motion.div
-            className="relative w-32 h-32 rounded-full border-4 border-transparent bg-gradient-to-r from-orange-500 via-yellow-500 to-orange-500 p-1"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            style={{
-              backgroundClip: "padding-box",
-              boxShadow: "0 0 40px rgba(251, 146, 60, 0.6)",
-            }}
-          >
-            {/* Inner circle */}
-            <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
-              <motion.div
-                className="text-2xl font-bold gradient-gold"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                SYNC
-              </motion.div>
-            </div>
-          </motion.div>
-          
-          {/* Particle effects */}
-          {[...Array(12)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-orange-400 rounded-full"
-              style={{
-                left: "50%",
-                top: "50%",
-                marginLeft: "-4px",
-                marginTop: "-4px",
-              }}
-              animate={{
-                x: [0, Math.cos((i * 30 * Math.PI) / 180) * 80],
-                y: [0, Math.sin((i * 30 * Math.PI) / 180) * 80],
-                opacity: [1, 0],
-                scale: [1, 0],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                delay: i * 0.15,
-                ease: "easeOut",
-              }}
-            />
-          ))}
-        </div>
+        {/* ── Terminal card: 347 × 183 ─────────────────────────────── */}
+        <div style={{
+          width: 347,
+          height: 183,
+          borderRadius: 11,
+          border: "1px solid #FFFFFF47",
+          background: "rgba(10,11,20,0.90)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          boxSizing: "border-box",
+        }}>
 
-        {/* Status Text */}
-        <motion.div
-          className="text-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          {authStep === "signing" ? (
-            <>
-              <h2 className="text-3xl font-bold text-white mb-2">
-                Sign Message{dots}
-              </h2>
-              <p className="text-gray-400 text-sm">
-                Please approve the signature request in your wallet
-              </p>
-            </>
-          ) : (
-            <>
-              <h2 className="text-3xl font-bold text-white mb-2">
-                Calculating{dots}
-              </h2>
-              <p className="text-gray-400 text-sm">
-                Analyzing your Prediction Apps history
-              </p>
-            </>
-          )}
-        </motion.div>
+          {/* Header row */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            padding: "11px 14px",
+            flexShrink: 0,
+          }}>
+            {/* 3 dots — #D9D9D9 */}
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ width: 9, height: 9, borderRadius: "50%", background: "#D9D9D9", flexShrink: 0 }} />
+            ))}
+            <span style={{
+              fontFamily: IBM,
+              fontWeight: 400,
+              fontSize: 15,
+              lineHeight: "112%",
+              letterSpacing: 0,
+              color: "#FFFFFF",
+              marginLeft: 2,
+            }}>
+              STREAK GENESIS INDEXER v1.0
+            </span>
+          </div>
 
-        {/* Epic Progress Bar */}
-        <motion.div
-          className="w-full max-w-md mt-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <div className="relative">
-            {/* Glow background */}
-            <div className="absolute inset-0 blur-xl opacity-50">
-              <motion.div
-                className="h-full bg-gradient-to-r from-orange-600 via-yellow-500 to-orange-600"
-                initial={{ width: 0 }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 4, ease: "easeInOut" }}
-              />
-            </div>
-            
-            {/* Main progress bar */}
-            <div className="relative h-4 bg-black border-2 border-orange-500/50 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-orange-600 via-yellow-400 to-orange-600 relative"
-                initial={{ width: 0 }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 4, ease: "easeInOut" }}
-                style={{
-                  boxShadow: "0 0 20px rgba(251, 146, 60, 0.8), 0 0 40px rgba(251, 146, 60, 0.4)",
-                }}
-              >
-                {/* Shimmer effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                  animate={{ x: ["-100%", "200%"] }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                />
-              </motion.div>
-              
-              {/* Particle effects */}
-              <motion.div
-                className="absolute inset-0 pointer-events-none"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {[...Array(8)].map((_, i) => (
+          {/* Divider: 346 × 0, border 1px solid #FFFFFF47 */}
+          <div style={{ width: 346, height: 0, borderBottom: "1px solid #FFFFFF47", flexShrink: 0 }} />
+
+          {/* Body */}
+          <div style={{
+            padding: "16px 14px 11px 14px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 13,
+            flex: 1,
+          }}>
+            {/* "> Connecting..." */}
+            <motion.p
+              key={currentMessage}
+              initial={{ opacity: 0.6 }}
+              animate={{ opacity: 1 }}
+              style={{ fontFamily: IBM, fontWeight: 400, fontSize: 14, lineHeight: "112%", color: "#FFFFFF", margin: 0 }}
+            >
+              &gt; {statusText}
+            </motion.p>
+
+            {/* Target */}
+            <p style={{ fontFamily: IBM, fontWeight: 400, fontSize: 14, lineHeight: "112%", color: "#FFFFFF", margin: 0 }}>
+              Target: {shortTarget}
+            </p>
+
+            {/* TEST MODE */}
+            <p style={{ fontFamily: IBM, fontWeight: 400, fontSize: 14, lineHeight: "112%", color: "#FBAC35", margin: 0 }}>
+              TEST MODE: Using demo wallet
+            </p>
+
+            {/* Progress bar — 301 × 13, gradient border */}
+            <div style={{ marginTop: 2 }}>
+              {/* Outer wrapper provides the gradient border via 1px padding */}
+              <div style={{
+                width: 315,
+                height: 13,
+                padding: "1px",
+                background: "linear-gradient(89.25deg, #FFE64E 12.16%, #F44E0C 66.85%)",
+                boxSizing: "border-box",
+                borderRadius: 99,
+                flexShrink: 0,
+              }}>
+                {/* Inner dark track */}
+                <div style={{
+                  width: "100%",
+                  height: "100%",
+                  background: "#0A0B10",
+                  overflow: "hidden",
+                  position: "relative",
+                  borderRadius: 99,
+                }}>
+                  {/* Animated fill — clips the dots as it grows */}
                   <motion.div
-                    key={i}
-                    className="absolute w-1 h-1 bg-orange-400 rounded-full"
-                    style={{ left: `${i * 12}%`, top: "50%" }}
-                    animate={{
-                      y: [-10, -30, -10],
-                      opacity: [0, 1, 0],
-                      scale: [0, 1, 0],
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 4, ease: "easeInOut" }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      height: "100%",
+                      overflow: "hidden",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 3,
+                      paddingLeft: 2,
                     }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                    }}
-                  />
-                ))}
-              </motion.div>
+                  >
+                    {/* Each segment: 7 × 7, rectangle, #FFE64E, glow shadow */}
+                    {[...Array(34)].map((_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: 0,
+                          background: "#FFE64E",
+                          boxShadow: "0px 0px 7.9px 2px rgba(251,178,56,0.71)",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ))}
+                  </motion.div>
+                </div>
+              </div>
             </div>
           </div>
-        </motion.div>
+        </div>
+
+        {/* Subtitle below card */}
+        <p style={{
+          fontFamily: IBM,
+          fontWeight: 400,
+          fontSize: 12,
+          lineHeight: "100%",
+          letterSpacing: 0,
+          textAlign: "center",
+          color: "rgba(255,255,255,0.4)",
+          marginTop: 16,
+        }}>
+          This may take a few seconds as we scan the blockchain...
+        </p>
       </motion.div>
     </div>
   );

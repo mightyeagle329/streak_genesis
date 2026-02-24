@@ -69,6 +69,23 @@ export function Landing({ referralCode }: LandingProps) {
   // null = not yet decided, "accepted" | "rejected" = already chosen
   const [cookieChoice, setCookieChoice] = useState<string | null>(null);
 
+  const handleConnect = async () => {
+    try {
+      await open();
+    } catch (err: unknown) {
+      // WalletConnect throws "Proposal expired" when the QR/session times out
+      // before the user approves — this is expected and not a real error.
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes("proposal expired") ||
+          msg.toLowerCase().includes("session proposal") ||
+          msg.toLowerCase().includes("expired")) {
+        console.warn("WalletConnect session expired — user can try again.");
+        return;
+      }
+      console.error("Wallet connection error:", err);
+    }
+  };
+
   // Read persisted choice on mount (localStorage is browser-only)
   useEffect(() => {
     const saved = localStorage.getItem("cookie_consent");
@@ -201,7 +218,7 @@ export function Landing({ referralCode }: LandingProps) {
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 49,
+                width: 75,
                 height: 23,
                 borderRadius: 17,
                 border: "1px solid rgba(255,255,255,0.15)",
@@ -216,7 +233,7 @@ export function Landing({ referralCode }: LandingProps) {
                 textAlign: "center",
               }}
             >
-              Beta
+              Genesis
             </span>
           </motion.div>
 
@@ -239,13 +256,11 @@ export function Landing({ referralCode }: LandingProps) {
               marginRight: "auto",
             }}
           >
-            Make
+            You traded millions
             <br />
-            Predictions.
+            on Polymarket
             <br />
-            Beat the
-            <br />
-            Markets.
+            and got nothing.
           </motion.h1>
 
 
@@ -264,19 +279,41 @@ export function Landing({ referralCode }: LandingProps) {
             </motion.div>
           )}
 
+          {/* Subtitle — "Claim your Streak XP for your past volume." */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            style={{
+              fontFamily: "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif",
+              fontWeight: 400,
+              fontSize: 15,
+              lineHeight: "112%",
+              letterSpacing: "0%",
+              textAlign: "center",
+              color: "#FFFFFF",
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}
+          >
+            Claim your{" "}
+            <span style={{ color: "#FFA600" }}>Streak XP</span>
+            {" "}for your past volume.
+          </motion.p>
+
           {/* CTA Button */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55 }}
+            transition={{ delay: 0.6 }}
             className="pt-2"
           >
-            <button onClick={() => open()} className="genesis-btn">
-              Connect Wallet
+            <button onClick={handleConnect} className="genesis-btn">
+              Connect Wallet &amp; Calculate Volume
             </button>
           </motion.div>
 
-          {/* Info text */}
+          {/* Info text — 2 lines */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -293,7 +330,9 @@ export function Landing({ referralCode }: LandingProps) {
               marginRight: "auto",
             }}
           >
-            and Calculate Volume
+            No Polymarket history? Perfect. You skipped the legacy platforms.
+            <br />
+            Welcome to the revolution, Challenger.
           </motion.p>
         </motion.div>
       </main>

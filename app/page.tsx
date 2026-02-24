@@ -38,6 +38,44 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [sybilReason, setSybilReason] = useState<string | undefined>(undefined);
 
+  // Suppress known WalletConnect noise that propagates as unhandled rejections
+  useEffect(() => {
+    const handler = (event: PromiseRejectionEvent) => {
+      const msg = event.reason instanceof Error
+        ? event.reason.message
+        : String(event.reason ?? "");
+      if (
+        msg.toLowerCase().includes("proposal expired") ||
+        msg.toLowerCase().includes("session proposal") ||
+        msg.toLowerCase().includes("no matching key") ||
+        msg.toLowerCase().includes("expired") && msg.toLowerCase().includes("wallet")
+      ) {
+        event.preventDefault();
+        console.warn("WalletConnect session expired — safely suppressed.");
+      }
+    };
+    window.addEventListener("unhandledrejection", handler);
+    return () => window.removeEventListener("unhandledrejection", handler);
+  }, []);
+
+  // Suppress WalletConnect "Proposal expired" unhandled rejections so they
+  // don't crash the UI — the user just needs to reconnect their wallet.
+  useEffect(() => {
+    const handler = (event: PromiseRejectionEvent) => {
+      const msg = event.reason?.message?.toLowerCase() ?? "";
+      if (
+        msg.includes("proposal expired") ||
+        msg.includes("session proposal") ||
+        msg.includes("pairing expired")
+      ) {
+        event.preventDefault();
+        console.warn("WalletConnect proposal expired — user needs to reconnect.");
+      }
+    };
+    window.addEventListener("unhandledrejection", handler);
+    return () => window.removeEventListener("unhandledrejection", handler);
+  }, []);
+
   // CRITICAL: Capture referral code on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

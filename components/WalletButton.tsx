@@ -21,22 +21,35 @@ export function WalletButton() {
     <div className="relative">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-800/80 hover:bg-gray-700 backdrop-blur-sm text-white rounded-lg border border-gray-600 transition-colors"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          padding: "6px 14px",
+          borderRadius: 99,
+          background: "rgba(255,255,255,0.07)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          cursor: "pointer",
+          transition: "background 0.2s",
+          fontFamily: "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif",
+          fontSize: 14,
+          color: "#FFFFFF",
+          whiteSpace: "nowrap",
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.13)")}
+        onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
       >
-        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-        <span className="font-mono text-sm">{shortAddress}</span>
+        <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ade80", flexShrink: 0 }} />
+        <span>{shortAddress}</span>
         <svg
-          className={`w-4 h-4 transition-transform ${showMenu ? "rotate-180" : ""}`}
+          style={{ width: 10, height: 10, transition: "transform 0.2s", transform: showMenu ? "rotate(180deg)" : "rotate(0deg)", opacity: 0.6 }}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 

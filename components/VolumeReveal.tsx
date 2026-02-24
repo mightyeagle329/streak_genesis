@@ -10,7 +10,8 @@ interface VolumeRevealProps {
   onContinue: () => void;
 }
 
-const XP_CAP_VOLUME = 1_000_000; // $1M hard cap per requirement
+const XP_CAP_VOLUME = 1_000_000;
+const IBM = "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif";
 
 export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
   const [showDetails, setShowDetails] = useState(false);
@@ -18,174 +19,208 @@ export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
   const isMaxCapped = profile.polymarket_volume_usd > XP_CAP_VOLUME;
 
   useEffect(() => {
-    setTimeout(() => setShowDetails(true), 500);
+    setTimeout(() => setShowDetails(true), 400);
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative z-10">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-3xl w-full text-center space-y-8"
-      >
-        {/* Volume Display */}
-        <div>
-          <motion.h2
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-2xl md:text-3xl text-gray-400 mb-4"
-          >
-            {profile.user_type === "VETERAN"
-              ? "Your Total Prediction Apps Volume"
-              : "Prediction Apps Volume Detected"}
-          </motion.h2>
+    <div className="min-h-screen relative flex flex-col">
 
-          <motion.div
-            className="text-6xl md:text-8xl font-bold gradient-gold mb-4"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-          >
-            <motion.span>
-              {formatVolume(profile.polymarket_volume_usd)}
-            </motion.span>
-          </motion.div>
+      {/* Blurred background */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/bg.png"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            maxWidth: "none",
+            width: 1243.62,
+            height: 829.08,
+            transform: "translate(-50%, -50%) rotate(-40deg)",
+            opacity: 0.8,
+            mixBlendMode: "lighten",
+            filter: "blur(72px)",
+          }}
+        />
+        <div className="absolute inset-0" style={{ background: "rgba(10,11,16,0.55)" }} />
+      </div>
 
-          {/* MAX CAP REACHED Badge */}
+      {/* Header */}
+      <div className="relative z-10 flex items-start justify-between">
+        {/* STREAK logo */}
+        <div style={{ paddingTop: 28, paddingLeft: 36, display: "flex", alignItems: "center" }}>
+          <div style={{ width: 17, height: 17, borderRadius: "50%", background: "#FFFFFF", border: "1px solid #0F0D3F", flexShrink: 0 }} />
+          <div style={{ width: 17, height: 17, borderRadius: "50%", background: "#FFFFFF", border: "1px solid #0F0D3F", flexShrink: 0, marginLeft: -8 }} />
+          <span style={{ marginLeft: 9, fontFamily: IBM, fontWeight: 400, fontSize: 23, lineHeight: "26px", color: "#FFFFFF", whiteSpace: "nowrap" }}>
+            STREAK
+          </span>
+        </div>
+
+        {/* Wallet button is handled globally by Web3Modal */}
+      </div>
+
+      {/* Main content — all centered */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+        >
+          {/* "Your Total Polymarket Volume" — 15px / 112% / white */}
+          <p style={{
+            fontFamily: IBM,
+            fontWeight: 400,
+            fontSize: 15,
+            lineHeight: "112%",
+            letterSpacing: 0,
+            color: "#FFFFFF",
+            margin: 0,
+          }}>
+            {profile.user_type === "VETERAN" ? "Your Total Polymarket Volume" : "Polymarket Volume Detected"}
+          </p>
+
+          {/* Volume — Nekst-Bold 44px / 84% / #FBAC35 */}
+          <motion.p
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.15, type: "spring", stiffness: 180 }}
+            style={{
+              fontFamily: "'Nekst', 'Inter', sans-serif",
+              fontWeight: 700,
+              fontSize: 44,
+              lineHeight: "84%",
+              letterSpacing: 0,
+              color: "#FBAC35",
+              margin: "10px 0 0 0",
+            }}
+          >
+            {formatVolume(profile.polymarket_volume_usd)}
+          </motion.p>
+
+          {/* MAX CAP badge — only when volume > $1M */}
           {isMaxCapped && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-              className="inline-flex items-center gap-2 mb-6"
+              transition={{ delay: 0.3, type: "spring" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 16px", borderRadius: 99, border: "2px solid #facc15", background: "rgba(250,204,21,0.1)", marginTop: 12 }}
             >
-              <div className="relative px-5 py-2 rounded-full border-2 border-yellow-400 bg-yellow-400/10">
-                {/* Glow effect */}
-                <motion.div
-                  className="absolute inset-0 rounded-full bg-yellow-400/20 blur-md"
-                  animate={{ opacity: [0.4, 0.8, 0.4] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                <span className="relative text-yellow-400 font-black text-sm tracking-widest uppercase flex items-center gap-2">
-                  <motion.span
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    🏆
-                  </motion.span>
-                  MAX CAP REACHED
-                  <motion.span
-                    animate={{ rotate: [0, -10, 10, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    🏆
-                  </motion.span>
-                </span>
-              </div>
+              <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>🏆</motion.span>
+              <span style={{ color: "#facc15", fontWeight: 900, fontSize: 12, letterSpacing: "0.1em" }}>MAX CAP REACHED</span>
+              <motion.span animate={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>🏆</motion.span>
             </motion.div>
           )}
 
-          {/* XP cap explanation for capped users */}
-          {isMaxCapped && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="text-sm text-gray-500 mb-4"
-            >
-              XP calculated on first{" "}
-              <span className="text-yellow-400 font-semibold">$1,000,000</span>{" "}
-              · Your full volume is displayed for prestige
-            </motion.p>
-          )}
-        </div>
-
-        {/* Profile Type Message */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: showDetails ? 1 : 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {profile.user_type === "CHALLENGER" ? (
-            <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-8 mb-6">
-              <h3 className="text-2xl font-bold text-purple-400 mb-3">
-                🌟 Welcome, Challenger!
-              </h3>
-              <p className="text-gray-300 text-lg">
-                No Prediction Apps history? Perfect. You skipped the legacy platforms.
-                <br />
-                <span className="text-orange-400 font-semibold">
-                  Welcome to the revolution.
-                </span>
-              </p>
-            </div>
-          ) : (
-            <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-8 mb-6">
-              <h3 className="text-2xl font-bold text-orange-400 mb-3">
-                🔥 Welcome Back, Veteran!
-              </h3>
-              <p className="text-gray-300 text-lg">
-                Your trading history has been validated.
-                <br />
-                Time to claim what you deserve.
-              </p>
-            </div>
-          )}
-        </motion.div>
-
-        {/* XP Display - LOCKED */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: showDetails ? 1 : 0 }}
-          transition={{ delay: 0.3 }}
-          className="relative"
-        >
-          <div className={`p-8 rounded-2xl border-2 ${auraInfo.color} bg-black/50 backdrop-blur-sm`}>
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="text-4xl">{auraInfo.emoji}</div>
-              <h3 className="text-3xl font-bold text-white">
-                {formatXP(profile.genesis_xp)} XP
-              </h3>
-              <div className="text-4xl">🔒</div>
-            </div>
-            
-            <div className="text-yellow-400 font-semibold mb-2">
-              {auraInfo.label} | {profile.assigned_rank}
-            </div>
-            
-            <div className="text-sm text-gray-400">
-              Status: <span className="text-orange-400 font-bold">PENDING</span>
-            </div>
-          </div>
-
-          {/* Lock overlay */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] rounded-2xl flex items-center justify-center pointer-events-none">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.5, type: "spring" }}
-              className="text-6xl opacity-50"
-            >
-              🔒
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Continue Button */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: showDetails ? 1 : 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <button
-            onClick={onContinue}
-            className="px-10 py-4 bg-gradient-to-r from-orange-500 to-yellow-500 text-black text-xl font-bold rounded-xl hover:scale-105 transition-transform duration-200 hover:shadow-2xl hover:shadow-orange-500/50"
+          {/* Welcome box — 294 × 88, border-radius 11, border 1px solid #FFFFFF47 */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: showDetails ? 1 : 0, y: showDetails ? 0 : 10 }}
+            transition={{ duration: 0.4 }}
+            style={{
+              width: 294,
+              height: 88,
+              borderRadius: 11,
+              border: "1px solid #FFFFFF47",
+              background: "rgba(10,11,20,0.60)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              marginTop: 27,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "0 16px",
+              boxSizing: "border-box",
+              gap: 7,
+            }}
           >
-            Continue to Unlock →
-          </button>
+            {profile.user_type === "CHALLENGER" ? (
+              <>
+                <p style={{ fontFamily: IBM, fontWeight: 700, fontSize: 15, lineHeight: "112%", color: "#FFFFFF", margin: 0 }}>
+                  🌟 Welcome, Challenger!
+                </p>
+                <p style={{ fontFamily: IBM, fontWeight: 400, fontSize: 15, lineHeight: "112%", color: "#FFFFFF", margin: 0 }}>
+                  No Polymarket history? Perfect. You skipped the legacy platforms.
+                </p>
+              </>
+            ) : (
+              <>
+                {/* "🔥 Welcome Back, Veteran!" — 700 / 15px / white */}
+                <p style={{ fontFamily: IBM, fontWeight: 700, fontSize: 15, lineHeight: "112%", color: "#FFFFFF", margin: 0 }}>
+                  🔥 Welcome Back, Veteran!
+                </p>
+                {/* description — 400 / 15px / white */}
+                <p style={{ fontFamily: IBM, fontWeight: 400, fontSize: 15, lineHeight: "112%", color: "#FFFFFF", margin: 0 }}>
+                  Your trading history has been validated. Time to claim what you deserve.
+                </p>
+              </>
+            )}
+          </motion.div>
+
+          {/* XP row — IBM 700 23px / white + lock icon 18px */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: showDetails ? 1 : 0 }}
+            transition={{ delay: 0.15, duration: 0.4 }}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 24 }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{
+                fontFamily: IBM,
+                fontWeight: 700,
+                fontSize: 23,
+                lineHeight: "112%",
+                color: "#FFFFFF",
+              }}>
+                {formatXP(profile.genesis_xp)} XP
+              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/lock.svg" alt="locked" width={17} height={25} style={{ display: "inline-block", flexShrink: 0 }} />
+            </div>
+
+            {/* "God Mode Unlocked | PRO" — 400 / 15px / white */}
+            <p style={{
+              fontFamily: IBM,
+              fontWeight: 400,
+              fontSize: 15,
+              lineHeight: "112%",
+              color: "#FFFFFF",
+              margin: "4px 0 0 0",
+            }}>
+              {auraInfo.label} | {profile.assigned_rank}
+            </p>
+
+            {/* "Status: PENDING" — 400 / 15px, PENDING in #FBAC35 */}
+            <p style={{
+              fontFamily: IBM,
+              fontWeight: 400,
+              fontSize: 15,
+              lineHeight: "112%",
+              color: "#FFFFFF",
+              margin: "4px 0 0 0",
+            }}>
+              Status:{" "}
+              <span style={{ color: "#FBAC35" }}>PENDING</span>
+            </p>
+          </motion.div>
+
+          {/* Continue to Unlock button */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: showDetails ? 1 : 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            style={{ marginTop: 28 }}
+          >
+            <button onClick={onContinue} className="genesis-btn">
+              Continue to Unlock
+            </button>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
     </div>
   );
 }

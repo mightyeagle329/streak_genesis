@@ -143,6 +143,62 @@ body {
   transform: scale(0.96);
 }
 
+/* ── Email input wrapper — same animated border as genesis-btn ── */
+.genesis-input-wrapper {
+  position: relative;
+  height: 49px;
+  border-radius: 60px;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18.4px);
+  -webkit-backdrop-filter: blur(18.4px);
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+.genesis-input-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 60px;
+  padding: 1.5px;
+  background: linear-gradient(
+    var(--btn-border-angle),
+    #ffffff,
+    rgba(255, 255, 255, 0.1),
+    #ffffff
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: btn-border-rotate 4s linear infinite;
+}
+
+.genesis-input-wrapper input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  padding: 0 20px;
+  border-radius: 60px;
+  font-size: 15px;
+  position: relative;
+  z-index: 1;
+}
+
+.genesis-input-wrapper input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
 
 /* ── Background lightning image ─────────────────────────────────────────── */
 /* width:  ~1400px @ 1440px viewport → ~1900px @ 390px viewport (grows)    */
@@ -153,7 +209,7 @@ body {
   left: 50%;
   /* override Tailwind's img { max-width: 100% } so the image can exceed viewport width */
   max-width: none;
-  width: clamp(1543.62px, calc(-24vw + 1590px), 1600px);
+  width: clamp(1643.62px, calc(-24vw + 1590px), 1600px);
   height: clamp(650px, calc(41vw + 300px), 829.08px);
   transform-origin: center center;
   transform: translate(-50%, -50%) rotate(-40deg);
