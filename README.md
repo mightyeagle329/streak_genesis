@@ -1,11 +1,11 @@
 # Streak Genesis - Vampire Attack Campaign
 
-A pre-launch campaign designed to attract Polymarket users by converting their historical trading volume into Streak XP and exclusive Day-1 launch privileges.
+A pre-launch campaign designed to attract Prediction Apps users by converting their historical trading volume into Streak XP and exclusive Day-1 launch privileges.
 
 ## Features
 
 - **Web3 Authentication**: Secure wallet connection using Wagmi v2 + Web3Modal + SIWE
-- **Volume Indexing**: Real-time Polymarket volume scanning via The Graph
+- **Volume Indexing**: Real-time Prediction Apps volume scanning via The Graph
 - **XP Calculation**: Tiered conversion system with hard caps
 - **Aura System**: Three tiers (Novice, Grinder, Pro) with visual effects
 - **Referral Program**: Alliance system with 10% commission on Volume XP
@@ -18,7 +18,7 @@ A pre-launch campaign designed to attract Polymarket users by converting their h
 - **Styling**: TailwindCSS with custom animations
 - **Animation**: Framer Motion
 - **Web3**: Wagmi v2, Viem, Web3Modal, SIWE
-- **Data**: The Graph (Polymarket Subgraph on Polygon)
+- **Data**: The Graph (Prediction Apps Subgraph on Polygon)
 
 ## Getting Started
 
@@ -64,7 +64,7 @@ npm start
 ├── app/
 │   ├── api/              # API routes (mock database)
 │   │   ├── profile/      # User profile CRUD
-│   │   ├── index-volume/ # Polymarket volume indexing
+│   │   ├── index-volume/ # Prediction Apps volume indexing
 │   │   ├── submit-email/ # Email submission & referral logic
 │   │   └── submit-tweet/ # Social quest verification
 │   ├── globals.css       # Global styles & animations
@@ -94,7 +94,7 @@ npm start
    - Existing user with email → Dashboard
    - Existing user without email → Email Gate
    - New user → Indexing
-4. **Indexing**: Fetches Polymarket volume from The Graph
+4. **Indexing**: Fetches Prediction Apps volume from The Graph
 5. **Reveal**: Shows volume and calculated XP (locked)
 6. **Email Gate**: Captures email, triggers referral commission
 7. **Dashboard**: Full profile with XP breakdown, referral link, social quest
@@ -133,7 +133,7 @@ npm start
 ## API Routes
 
 ### POST /api/index-volume
-Queries The Graph for Polymarket volume and calculates Genesis profile.
+Queries The Graph for Prediction Apps volume and calculates Genesis profile.
 
 **Request:**
 ```json

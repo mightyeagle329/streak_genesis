@@ -62,14 +62,18 @@ export default function Home() {
   // don't crash the UI — the user just needs to reconnect their wallet.
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
-      const msg = event.reason?.message?.toLowerCase() ?? "";
+      const msg = (event.reason?.message ?? event.reason ?? "").toString().toLowerCase();
       if (
         msg.includes("proposal expired") ||
         msg.includes("session proposal") ||
-        msg.includes("pairing expired")
+        msg.includes("pairing expired") ||
+        msg.includes("failed to connect to metamask") ||
+        msg.includes("metamask") ||
+        msg.includes("user rejected") ||
+        msg.includes("user denied")
       ) {
         event.preventDefault();
-        console.warn("WalletConnect proposal expired — user needs to reconnect.");
+        console.warn("Wallet error (suppressed):", event.reason?.message ?? event.reason);
       }
     };
     window.addEventListener("unhandledrejection", handler);

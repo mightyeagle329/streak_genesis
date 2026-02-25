@@ -256,58 +256,109 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
             </>
           ) : (
             <>
-              {/* Verify step */}
-              <p style={{ fontFamily: IBM, fontWeight: 400, fontSize: 15, lineHeight: "112%", color: "#FFFFFF", margin: 0 }}>
-                We sent a 6-digit code to
-              </p>
-              <h1 className="text-[36px] md:text-[44px]"
-                style={{ fontFamily: "'Nekst', 'Inter', sans-serif", fontWeight: 700, lineHeight: "84%", color: "#FBAC35", margin: "10px 0 0 0" }}>
-                Verify Your Email
+              {/* ── "Verify Your Email" title ── */}
+              <h1 className="text-[36px] md:text-[44px] w-full max-w-[90vw] md:max-w-[227px]"
+                style={{
+                  fontFamily: "'Nekst', 'Inter', sans-serif",
+                  fontWeight: 700,
+                  lineHeight: "84%",
+                  color: "#FBAC35",
+                  margin: 0,
+                  textAlign: "center",
+                }}>
+                Verify<br />Your Email
               </h1>
 
+              {/* ── "We sent a 6-digit code to …" subtitle ── */}
+              <p className="mt-5 w-full max-w-[90vw] md:max-w-[344px]"
+                style={{ fontFamily: IBM, fontWeight: 400, fontSize: 15, lineHeight: "112%", color: "rgba(255,255,255,0.7)", margin: "20px 0 0 0" }}>
+                We sent a 6-digit code to{" "}
+                <span style={{ color: "#FFFFFF", fontWeight: 400 }}>{email}</span>
+              </p>
+
+              {/* ── Error ── */}
               {error && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="mt-4 w-full max-w-[90vw]"
+                  className="mt-4 w-full max-w-[90vw] md:max-w-[400px]"
                   style={{ color: "#f87171", fontSize: 13, fontFamily: IBM }}>
                   {error}
                 </motion.p>
               )}
 
+              {/* ── Code input + Verify button (same row) ── */}
               <form onSubmit={handleVerificationSubmit}
-                className="flex flex-col items-center gap-3 mt-7 w-full max-w-[90vw] md:max-w-[280px]">
+                className="flex flex-col md:flex-row gap-3 mt-7 items-center w-full max-w-[90vw] md:max-w-none">
 
-                {/* Code input */}
-                <div className="genesis-input-wrapper w-full">
+                {/* Verification code input */}
+                <div className="genesis-input-wrapper w-full md:w-[233px]">
                   <input
                     type="text" value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="000000" required maxLength={6} disabled={isSubmitting} autoFocus
-                    style={{ fontFamily: IBM, fontSize: 22, textAlign: "center", letterSpacing: "0.2em", opacity: isSubmitting ? 0.6 : 1 }}
+                    placeholder="Verification Code" required maxLength={6} disabled={isSubmitting} autoFocus
+                    style={{ fontFamily: IBM, fontSize: 15, textAlign: "left", letterSpacing: 0, opacity: isSubmitting ? 0.6 : 1 }}
                   />
                 </div>
 
                 {/* Verify button */}
                 <button type="submit" disabled={isSubmitting}
-                  className="genesis-btn w-full"
-                  style={{ minWidth: 0, fontFamily: IBM, opacity: isSubmitting ? 0.6 : 1 }}>
+                  className="genesis-btn w-full md:w-[162px]"
+                  style={{ minWidth: 0, fontFamily: IBM, fontSize: 15, opacity: isSubmitting ? 0.6 : 1 }}>
                   {isSubmitting ? "Verifying..." : "Verify & Continue"}
                 </button>
               </form>
 
-              <p className="mt-4" style={{ fontFamily: IBM, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-                Check your inbox for the 6-digit code
+              {/* ── "Check your email inbox…" ── */}
+              <p className="mt-5 w-full max-w-[90vw] md:max-w-[357px]"
+                style={{ fontFamily: IBM, fontWeight: 400, fontSize: 15, lineHeight: "112%", color: "rgba(255,255,255,0.7)", textAlign: "center" }}>
+                Check your email inbox for the 6-digit code
               </p>
 
-              <div className="flex gap-6 mt-3">
-                <button type="button" onClick={handleResendCode} disabled={isSubmitting}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "#FBAC35", fontFamily: IBM, fontSize: 13, opacity: isSubmitting ? 0.5 : 1 }}>
-                  Resend code
-                </button>
-                <button type="button" onClick={() => { setStep("email"); setVerificationCode(""); setError(""); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: IBM, fontSize: 13 }}>
-                  ← Change email
-                </button>
-              </div>
+              {/* ── "Didn't receive code? Resend" ── */}
+              <button type="button" onClick={handleResendCode} disabled={isSubmitting}
+                className="mt-3"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: isSubmitting ? "default" : "pointer",
+                  fontFamily: IBM,
+                  fontWeight: 400,
+                  fontSize: 13,
+                  lineHeight: "112%",
+                  color: "#FBAC35",
+                  textDecoration: "underline",
+                  textUnderlineOffset: "2px",
+                  opacity: isSubmitting ? 0.5 : 1,
+                  padding: 0,
+                }}>
+                Didn&apos;t receive code? Resend
+              </button>
+
+              {/* ── "← Change email address" pill ── */}
+              <button type="button"
+                onClick={() => { setStep("email"); setVerificationCode(""); setError(""); }}
+                className="mt-4 flex items-center gap-2"
+                style={{
+                  width: 185,
+                  height: 32,
+                  borderRadius: 17,
+                  background: "rgba(255,255,255,0.2)",
+                  backdropFilter: "blur(52.6px)",
+                  WebkitBackdropFilter: "blur(52.6px)",
+                  border: "none",
+                  cursor: "pointer",
+                  justifyContent: "center",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}>
+                {/* Left arrow icon */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/direction.svg" alt="" aria-hidden="true"
+                  style={{ width: 13.6, height: 11.1, opacity: 0.7, flexShrink: 0 }} />
+                <span style={{ fontFamily: IBM, fontWeight: 400, fontSize: 15, lineHeight: "112%", color: "rgba(255,255,255,0.7)" }}>
+                  Change email address
+                </span>
+              </button>
             </>
           )}
         </motion.div>

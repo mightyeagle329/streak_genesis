@@ -70,7 +70,7 @@ export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
           transition={{ duration: 0.5 }}
           style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
         >
-          {/* "Your Total Polymarket Volume" — 15px / 112% / white */}
+          {/* "Your Total Prediction Apps Volume" — 15px / 112% / white */}
           <p style={{
             fontFamily: IBM,
             fontWeight: 400,
@@ -80,7 +80,7 @@ export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
             color: "#FFFFFF",
             margin: 0,
           }}>
-            {profile.user_type === "VETERAN" ? "Your Total Polymarket Volume" : "Polymarket Volume Detected"}
+            {profile.user_type === "VETERAN" ? "Your Total Prediction Apps Volume" : "Prediction Apps Volume Detected"}
           </p>
 
           {/* Volume — Nekst-Bold 44px / 84% / #FBAC35 */}
@@ -144,7 +144,7 @@ export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
                   🌟 Welcome, Challenger!
                 </p>
                 <p style={{ fontFamily: IBM, fontWeight: 400, fontSize: 15, lineHeight: "112%", color: "#FFFFFF", margin: 0 }}>
-                  No Polymarket history? Perfect. You skipped the legacy platforms.
+                  No Prediction Apps history? Perfect. You skipped the legacy platforms.
                 </p>
               </>
             ) : (

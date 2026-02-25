@@ -250,16 +250,14 @@ export function Landing({ referralCode }: LandingProps) {
               letterSpacing: "0%",
               textAlign: "center",
               color: "#FFFFFF",
-              width: 447,
+              width: 500,
               maxWidth: "90vw",
               marginLeft: "auto",
               marginRight: "auto",
             }}
           >
-            You traded millions
-            <br />
-            on Polymarket
-            <br />
+            You traded millions<br />
+            on Prediction Apps<br />
             and got nothing.
           </motion.h1>
 
@@ -330,7 +328,7 @@ export function Landing({ referralCode }: LandingProps) {
               marginRight: "auto",
             }}
           >
-            No Polymarket history? Perfect. You skipped the legacy platforms.
+            No Prediction Apps history? Perfect. You skipped the legacy platforms.
             <br />
             Welcome to the revolution, Challenger.
           </motion.p>

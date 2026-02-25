@@ -48,12 +48,20 @@ export function IndexingAnimation({
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
   useEffect(() => { onSybilRejectedRef.current = onSybilRejected; }, [onSybilRejected]);
 
+  // Prevent React Strict Mode's double-invoke from sending two signature requests
+  const hasFetched = useRef(false);
+
   const { signMessageAsync } = useSignMessage();
 
   // 🧪 TESTING: Always use test wallet for backend
   const TEST_WALLET = "0x6a72f61820b26b1fe4d956e17b6dc2a1ea3033ee";
 
   useEffect(() => {
+    // Guard: refs survive the Strict Mode unmount/remount cycle,
+    // so the second mount sees true and returns immediately.
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
     const dotsInterval = setInterval(() => {
       setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
     }, 500);
@@ -125,9 +133,13 @@ Issued At: ${new Date(timestamp).toISOString()}`;
       } catch (error) {
         if (error instanceof Error) {
           const msg = error.message.toLowerCase();
-          if (msg.includes("proposal expired") || msg.includes("session proposal") || msg.includes("pairing expired")) {
-            // WalletConnect proposal timed out — ask user to reconnect
-            alert("Wallet connection timed out. Please disconnect and reconnect your wallet to try again.");
+          if (
+            msg.includes("proposal expired") ||
+            msg.includes("session proposal") ||
+            msg.includes("pairing expired") ||
+            msg.includes("failed to connect to metamask")
+          ) {
+            alert("Wallet connection timed out or failed. Please disconnect and reconnect your wallet to try again.");
           } else if (msg.includes("user rejected") || msg.includes("user denied")) {
             alert("Signature request was rejected. Please approve the signature request in your wallet.");
           } else if (isSybilError(0, error.message)) {
