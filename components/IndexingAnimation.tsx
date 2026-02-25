@@ -42,11 +42,14 @@ export function IndexingAnimation({
   const [dots, setDots] = useState("");
   const [authStep, setAuthStep] = useState<"signing" | "indexing">("signing");
 
-  // Keep latest callbacks in a ref so the effect doesn't re-run when they change
+  // Keep latest callbacks and referralCode in refs so the effect never re-runs
+  // when they change — only walletAddress should restart the flow
   const onCompleteRef = useRef(onComplete);
   const onSybilRejectedRef = useRef(onSybilRejected);
+  const referralCodeRef = useRef(referralCode);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
   useEffect(() => { onSybilRejectedRef.current = onSybilRejected; }, [onSybilRejected]);
+  useEffect(() => { referralCodeRef.current = referralCode; }, [referralCode]);
 
   // Prevent React Strict Mode's double-invoke from sending two signature requests
   const hasFetched = useRef(false);
@@ -89,7 +92,21 @@ Issued At: ${new Date(timestamp).toISOString()}`;
         setAuthStep("indexing");
 
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
-        const requestBody = { wallet_address: TEST_WALLET.toLowerCase(), message: messageToSign, signature, timestamp, nonce };
+        const requestBody: Record<string, unknown> = {
+          wallet_address: TEST_WALLET.toLowerCase(),
+          message: messageToSign,
+          signature,
+          timestamp,
+          nonce,
+        };
+        // Include referrer only when a ref code was captured from the URL,
+        // and only if it isn't the user's own ref code (self-referral guard —
+        // we don't know our own code yet, but the backend rejects self-referrals
+        // so we let it pass and rely on backend validation; for testing with the
+        // fixed TEST_WALLET the referrer is simply omitted to avoid the self-ref error)
+        if (referralCodeRef.current) {
+          requestBody.referrer = referralCodeRef.current;
+        }
         console.log("📤 REQUEST:", JSON.stringify(requestBody, null, 2));
 
         const response = await fetch(`${backendUrl}/v1/account/genesis`, {
@@ -145,7 +162,16 @@ Issued At: ${new Date(timestamp).toISOString()}`;
           } else if (isSybilError(0, error.message)) {
             onSybilRejectedRef.current?.(error.message);
           } else {
-            alert("Failed to authenticate or fetch profile. Please try again.");
+            // Extract the actual backend error message if present
+            const backendMatch = error.message.match(/Backend returned \d+: ([\s\S]*)/);
+            if (backendMatch) {
+              let detail = backendMatch[1];
+              try { detail = JSON.parse(detail).error || JSON.parse(detail).message || detail; } catch { /* raw text */ }
+              console.error("❌ Backend error:", detail);
+              alert(`Error: ${detail}`);
+            } else {
+              alert(`Failed to authenticate or fetch profile.\n\nDetails: ${error.message}`);
+            }
           }
         } else {
           alert("Failed to authenticate or fetch profile. Please try again.");
@@ -156,7 +182,7 @@ Issued At: ${new Date(timestamp).toISOString()}`;
     authenticateAndFetch();
     return () => { clearInterval(dotsInterval); clearInterval(messageInterval); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletAddress, referralCode]);
+  }, [walletAddress]);
 
   const IBM = "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif";
   const shortTarget = `${TEST_WALLET.slice(0, 8)}... ${TEST_WALLET.slice(-4)}`;

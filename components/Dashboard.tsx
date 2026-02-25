@@ -26,8 +26,11 @@ export function Dashboard({ profile }: DashboardProps) {
   const referralUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}?ref=${currentProfile.ref_code}`
-      : `https://genesis.streak.app?ref=${currentProfile.ref_code}`;
-  const displayUrl = `streak.trade/genesis?ref=${currentProfile.ref_code}`;
+      : `http://localhost:3000?ref=${currentProfile.ref_code}`;
+  const displayUrl =
+    typeof window !== "undefined"
+      ? `${window.location.host}?ref=${currentProfile.ref_code}`
+      : `localhost:3000?ref=${currentProfile.ref_code}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralUrl);
