@@ -1,209 +1,265 @@
-# Streak Genesis - Vampire Attack Campaign
+# Streak Genesis — Pre-Launch Campaign
 
-A pre-launch campaign designed to attract Prediction Apps users by converting their historical trading volume into Streak XP and exclusive Day-1 launch privileges.
+A pre-launch web application that authenticates Web3 wallets, queries on-chain Polygon data via an external backend, calculates XP from historical Prediction Apps trading volume, and securely stores leads.
 
-## Features
-
-- **Web3 Authentication**: Secure wallet connection using Wagmi v2 + Web3Modal + SIWE
-- **Volume Indexing**: Real-time Prediction Apps volume scanning via The Graph
-- **XP Calculation**: Tiered conversion system with hard caps
-- **Aura System**: Three tiers (Novice, Grinder, Pro) with visual effects
-- **Referral Program**: Alliance system with 10% commission on Volume XP
-- **Social Quests**: Twitter/X sharing for bonus XP
-- **Gamified UI**: Heavy animations using Framer Motion
+---
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), React 18, TypeScript
-- **Styling**: TailwindCSS with custom animations
-- **Animation**: Framer Motion
-- **Web3**: Wagmi v2, Viem, Web3Modal, SIWE
-- **Data**: The Graph (Prediction Apps Subgraph on Polygon)
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15 (App Router) |
+| UI | React 18, TailwindCSS, Framer Motion |
+| Web3 | Wagmi v2, Viem, Web3Modal (AppKit) |
+| Auth | SIWE (Sign-In with Ethereum) — per-request message signing |
+| Backend | External Rust API (`NEXT_PUBLIC_BACKEND_API_URL`) |
+| Fonts | Nekst Bold (local woff2), IBM Plex Sans Condensed (Google Fonts) |
+| Language | TypeScript |
+
+---
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and npm
-- WalletConnect Project ID (optional, uses fallback in dev)
+- WalletConnect Project ID — get one free at [cloud.walletconnect.com](https://cloud.walletconnect.com)
 
 ### Installation
 
 ```bash
-# Install dependencies
 npm install
+```
 
-# Copy environment file
-cp .env.local.example .env.local
+### Environment Variables
 
-# Edit .env.local and add your WalletConnect Project ID (optional)
+Create a `.env.local` file in the project root:
+
+```env
+# Required — WalletConnect / AppKit project ID
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+
+# Backend API base URL (no trailing slash)
+NEXT_PUBLIC_BACKEND_API_URL=http://62.171.153.189:8080
 ```
 
 ### Development
 
 ```bash
-# Run development server
 npm run dev
-
 # Open http://localhost:3000
 ```
 
 ### Build
 
 ```bash
-# Build for production
 npm run build
-
-# Start production server
 npm start
 ```
+
+---
 
 ## Project Structure
 
 ```
 ├── app/
-│   ├── api/              # API routes (mock database)
-│   │   ├── profile/      # User profile CRUD
-│   │   ├── index-volume/ # Prediction Apps volume indexing
-│   │   ├── submit-email/ # Email submission & referral logic
-│   │   └── submit-tweet/ # Social quest verification
-│   ├── globals.css       # Global styles & animations
-│   ├── layout.tsx        # Root layout with Web3Provider
-│   └── page.tsx          # Main app flow orchestration
-├── components/           # React components
-│   ├── Landing.tsx       # Initial landing page
-│   ├── IndexingAnimation.tsx  # Blockchain scanning UI
-│   ├── VolumeReveal.tsx  # Volume & XP reveal
-│   ├── EmailGate.tsx     # Email capture form
-│   ├── Dashboard.tsx     # Main dashboard
-│   ├── AuraCard.tsx      # XP & Aura display
-│   ├── ReferralSection.tsx    # Alliance referral links
-│   ├── SocialQuest.tsx   # Twitter/X quest
-│   ├── UnlockWarning.tsx # Day-1 unlock notice
-│   └── BackgroundEffects.tsx  # Animated background
-└── lib/
-    ├── web3-provider.tsx # Wagmi & Web3Modal config
-    └── utils.ts          # Utility functions
+│   ├── globals.css          # Global styles, custom animations, font declarations
+│   ├── layout.tsx           # Root layout — loads fonts, wraps with Web3Provider
+│   └── page.tsx             # Main flow orchestrator (state machine)
+├── components/
+│   ├── Landing.tsx          # Landing page with wallet connect CTA
+│   ├── IndexingAnimation.tsx # SIWE signing + backend indexing UI
+│   ├── VolumeReveal.tsx     # Volume & XP reveal (new users only)
+│   ├── EmailGate.tsx        # Email capture + OTP verification
+│   ├── Dashboard.tsx        # Full Genesis profile dashboard
+│   ├── SybilRejection.tsx   # Rejection screen for ineligible wallets
+│   ├── WalletButton.tsx     # Connected wallet indicator (top-right)
+│   └── BackgroundEffects.tsx # Ambient background layer
+├── lib/
+│   ├── web3-provider.tsx    # Wagmi + Web3Modal (AppKit) configuration
+│   └── utils.ts             # formatXP, formatVolume, generateRefCode, etc.
+└── public/
+    ├── bg.png               # Background lightning image
+    ├── fonts/
+    │   └── Nekst Bold.woff2 # Custom display font
+    ├── lock.svg
+    ├── lock_yellow.svg
+    ├── copy.svg
+    ├── x.svg
+    └── direction.svg
 ```
+
+---
 
 ## User Flow
 
-1. **Landing Page**: Captures referral code from URL → localStorage
-2. **Wallet Connection**: Web3Modal prompt with SIWE
-3. **Routing Logic**: 
-   - Existing user with email → Dashboard
-   - Existing user without email → Email Gate
-   - New user → Indexing
-4. **Indexing**: Fetches Prediction Apps volume from The Graph
-5. **Reveal**: Shows volume and calculated XP (locked)
-6. **Email Gate**: Captures email, triggers referral commission
-7. **Dashboard**: Full profile with XP breakdown, referral link, social quest
+```
+Landing Page
+    │  (referral code captured from ?ref= URL param → localStorage)
+    ▼
+Wallet Connect  (Web3Modal)
+    │
+    ▼
+Indexing Animation
+    ├── SIWE message constructed & signed by wallet
+    ├── POST /v1/account/genesis  → backend validates, returns profile
+    │
+    ├── if backend returns email already on record
+    │       └──► Dashboard  (skip reveal + email gate)
+    │
+    ├── if backend returns Sybil/403
+    │       └──► Sybil Rejection screen
+    │
+    └── new user (no email)
+            ▼
+        Volume Reveal
+            ▼
+        Email Gate  (send OTP → verify OTP)
+            ▼
+        Dashboard
+```
 
-## Key Features
+---
 
-### XP Calculation
+## Authentication (SIWE)
 
-- Welcome Bonus: 1,000 XP (all users)
-- Tier 1 ($0-$10k): 10:1 ratio (10% conversion)
-- Tier 2 ($10k-$50k): 20:1 ratio (5% conversion)
-- Tier 3 ($50k+): 50:1 ratio (2% conversion)
-- Hard Cap: $1M volume (max 23,000 XP)
+Every backend request is authenticated with a per-request signed message:
 
-### Aura Tiers
+```
+Streak Genesis wants you to sign in with your Ethereum account:
+0x<wallet_address>
 
-- **Novice** (< $1k): Grey border, 1.0x multiplier Day-1
-- **Grinder** ($1k-$25k): Orange fire, 1.5x multiplier Day-1 (skips 4 days)
-- **Pro** ($25k+): Golden fire, 2.0x God Mode Day-1 (instant unlock)
+By signing this message, you prove ownership of your wallet address.
 
-### Referral System
+URI: <origin>
+Version: 1
+Chain ID: 137
+Nonce: <random>
+Issued At: <ISO timestamp>
+```
 
-- Each user gets unique ref code
-- 10% commission on invited user's Volume XP only
-- Commission minted after email submission
-- Welcome bonus excluded from commission
+**Request body sent to** `POST /v1/account/genesis`:
 
-### Security
-
-- SIWE for cryptographic wallet proof
-- Email normalization (Gmail alias stripping)
-- Unique constraints on wallet & email
-- Rate limiting on indexer endpoints
-- Sybil filter for Challengers ($0 volume)
-
-## API Routes
-
-### POST /api/index-volume
-Queries The Graph for Prediction Apps volume and calculates Genesis profile.
-
-**Request:**
 ```json
 {
-  "walletAddress": "0x...",
-  "referralCode": "ABC123"
+  "wallet_address": "0x...",
+  "message": "<full SIWE message string>",
+  "signature": "0x...",
+  "timestamp": 1700000000000,
+  "nonce": "abc123xyz"
 }
 ```
 
-**Response:**
+> **Note (testing):** A fixed test wallet address (`0x6a72f61820b26b1fe4d956e17b6dc2a1ea3033ee`) is currently used for all backend requests regardless of the connected wallet, to enable consistent backend testing.
+
+---
+
+## Backend API Endpoints
+
+All endpoints are relative to `NEXT_PUBLIC_BACKEND_API_URL`.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/v1/account/genesis` | Authenticate wallet, index volume, return profile |
+| `POST` | `/v1/account/genesis/register` | Send OTP to email address |
+| `POST` | `/v1/account/genesis/register/confirm` | Verify OTP and link email to wallet |
+| `POST` | `/v1/account/genesis/social/tweet` | Submit tweet URL for +500 Social XP |
+
+### Profile Response Shape (`/v1/account/genesis`)
+
 ```json
 {
-  "success": true,
-  "profile": {
-    "wallet_address": "0x...",
-    "user_type": "VETERAN",
-    "polymarket_volume_usd": 50000,
-    "genesis_xp": 3500,
-    "assigned_aura": "ORANGE_FIRE",
-    "assigned_rank": "GRINDER",
-    "ref_code": "XYZ789",
-    ...
-  }
+  "wallet_address": "0x...",
+  "user_type": "VETERAN",
+  "polymarket_volume_usd": 50000,
+  "genesis_xp": 3500,
+  "alliance_xp": 0,
+  "social_xp": 0,
+  "total_xp": 3500,
+  "is_xp_locked": true,
+  "assigned_aura": "ORANGE_FIRE",
+  "assigned_rank": "PRO",
+  "ref_code": "XYZ789",
+  "twitter_shared": false,
+  "email": null
 }
 ```
 
-### POST /api/submit-email
-Validates and stores email, triggers referral commission.
+If `email` is non-null in the response, the frontend skips Volume Reveal and Email Gate and goes directly to the Dashboard.
 
-### POST /api/submit-tweet
-Verifies Twitter/X URL and grants +500 social XP.
+---
 
-## Backend Integration
+## XP Calculation (handled by backend)
 
-**Current**: Mock in-memory database for development.
+| Tier | Volume Range | Rate |
+|---|---|---|
+| Welcome Bonus | All users | +1,000 XP flat |
+| Tier 1 | $0 – $10k | 10:1 (10% of volume) |
+| Tier 2 | $10k – $50k | 20:1 (5% of volume) |
+| Tier 3 | $50k+ | 50:1 (2% of volume) |
+| Hard Cap | $1M+ | Max ~23,000 XP from volume |
 
-**Production**: Replace mock database with PostgreSQL:
-- Use pg or Prisma for database connection
-- Implement proper error handling
-- Add rate limiting middleware
-- Use real email validation service (ZeroBounce, Hunter.io)
-- Implement tweet verification via Twitter API
+---
 
-## Environment Variables
+## Aura Tiers
 
-```env
-# Required for production
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+| Aura | Volume | Day-1 Multiplier |
+|---|---|---|
+| `GREY_BORDER` | < $1k | 1.0x (standard) |
+| `ORANGE_FIRE` | $1k – $25k | 1.5x (skips 4 grind days) |
+| `GOLDEN_FIRE` | $25k+ | 2.0x God Mode (instant unlock) |
 
-# Backend (hardcoded in POC)
-THE_GRAPH_API_KEY=06fa2f6386af468ecdd4be9ec45650f1
-```
+---
+
+## Referral (Alliance) System
+
+- Every registered user receives a unique `ref_code`.
+- Share link format: `<origin>?ref=<code>`
+- Referrer earns **10% commission** on the invited user's **Volume XP only** (Welcome Bonus excluded).
+- Commission is minted instantly on the referrer's account after the invite completes email verification.
+- Max commission per invite: ~2,200 XP (from a $1M whale).
+
+---
+
+## Sybil Protection
+
+The backend returns HTTP `403` or a response body containing sybil-related keywords (`sybil`, `wallet_too_new`, `insufficient gas`, `not_eligible`) for wallets that fail eligibility checks. The frontend detects this and routes to the `SybilRejection` screen instead of showing a generic error.
+
+---
+
+## Cookie Consent
+
+A GDPR-style cookie banner is shown on first visit (bottom-right on desktop, full-width at bottom on mobile). The user's choice (`accepted` / `rejected`) is persisted in `localStorage` under the key `cookie_consent` and the banner is never shown again once dismissed.
+
+---
+
+## Key Design Decisions
+
+- **Fonts**: Nekst Bold (display headings in #FBAC35) and IBM Plex Sans Condensed (all body/UI text). IBM Plex loaded via `next/font/google` as CSS variable `--font-ibm-condensed`.
+- **Background**: Single `bg.png` image rotated ~40°, blurred at 72px on interior pages, unblurred on Landing.
+- **Animated borders**: CSS `@property` + `::before` pseudo-element for the rotating gradient border on buttons and inputs (`.genesis-btn`, `.genesis-input-wrapper`).
+- **Double-invoke guard**: `hasFetched` ref in `IndexingAnimation` prevents React Strict Mode from triggering two simultaneous wallet signature requests.
+- **WalletConnect error suppression**: Global `unhandledrejection` handler in `page.tsx` suppresses "Proposal expired" and MetaMask disconnection errors from crashing the Next.js error overlay.
+
+---
 
 ## Production Checklist
 
-- [ ] Replace mock database with PostgreSQL
-- [ ] Add proper error logging (Sentry, LogRocket)
-- [ ] Implement rate limiting (Redis + Express Rate Limit)
-- [ ] Add email validation service integration
-- [ ] Implement Twitter API verification
-- [ ] Set up analytics (PostHog, Mixpanel)
-- [ ] Add SIWE backend verification
-- [ ] Deploy to Vercel/Netlify
-- [ ] Configure custom domain (genesis.streak.app)
-- [ ] Add OG image generation for social sharing
-- [ ] Set up monitoring & alerts
+- [ ] Remove test wallet override in `IndexingAnimation.tsx` (use real `walletAddress`)
+- [ ] Set `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` in production environment
+- [ ] Set `NEXT_PUBLIC_BACKEND_API_URL` to production backend URL
+- [ ] Configure CORS on backend to allow production domain
+- [ ] Deploy to Vercel / Netlify
+- [ ] Configure custom domain (`genesis.streak.app`)
+- [ ] Add OG image (`/public/og.png`) for social sharing previews
+- [ ] Set up error monitoring (Sentry)
+- [ ] Set up analytics (PostHog / Mixpanel)
+
+---
 
 ## License
 
-Proprietary - Streak Genesis Campaign
+Proprietary — Streak Genesis Campaign
 
 ## Support
 
