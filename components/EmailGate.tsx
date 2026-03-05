@@ -16,9 +16,10 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
   const [step, setStep] = useState<"email" | "verify">("email");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  
-  // 🧪 TESTING: Always use test wallet
-  const TEST_WALLET = "0x6a72f61820b26b1fe4d956e17b6dc2a1ea3033ee";
+
+  // Use the real connected wallet address from the profile.
+  // (Previous test-wallet wiring caused verification to apply to the wrong account.)
+  const walletAddress = profile.wallet_address;
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,11 +85,11 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
       const requestBody = {
         email: email.trim(),
         code: verificationCode,
-        wallet_address: TEST_WALLET.toLowerCase(), // Use test wallet
+        wallet_address: walletAddress.toLowerCase(),
       };
 
       console.log("📤 Confirming verification code to:", apiEndpoint);
-      console.log("🧪 Using test wallet:", TEST_WALLET);
+      console.log("✅ Using wallet:", walletAddress);
       console.log("📤 Request body:", requestBody);
 
       const response = await fetch(apiEndpoint, {
