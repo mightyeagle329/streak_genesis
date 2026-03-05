@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { useConnect } from "wagmi";
 
 interface LandingProps {
   referralCode: string | null;
@@ -65,25 +65,108 @@ const COOKIE_FONT: React.CSSProperties = {
 };
 
 export function Landing({ referralCode }: LandingProps) {
-  const { open } = useWeb3Modal();
+  const { connect, connectors } = useConnect();
   // null = not yet decided, "accepted" | "rejected" = already chosen
   const [cookieChoice, setCookieChoice] = useState<string | null>(null);
+  const [showWalletPicker, setShowWalletPicker] = useState(false);
+
+  type WalletOption = {
+    id: string;
+    name: string;
+    connector?: (typeof connectors)[number];
+    /** Wallet seems installed/present in browser */
+    detected: boolean;
+    /** Wallet has an EIP-1193 provider we can actually connect to */
+    connectable: boolean;
+    notConnectableReason?: string;
+  };
+
+  const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
+
+  // We only support installed injected wallets, and we want *exactly one button per wallet*.
+  // Build a stable candidate list (MetaMask, Phantom) by connector id.
+  const connectorById = new Map(connectors.map(c => [c.id, c] as const));
+  const candidateConnectors = [
+    connectorById.get("metaMask"),
+    connectorById.get("phantom"),
+  ].filter(Boolean) as typeof connectors;
+
+  // Only show wallets that are actually detected in the browser.
+  // Note: Phantom can be installed without exposing an EVM provider. In that case we still show
+  // Phantom but disable it and explain what needs to be enabled.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const phantomInstalled = typeof window !== "undefined" && !!(window as any).phantom;
+      const phantomEvmEnabled = typeof window !== "undefined" && !!(window as any).phantom?.ethereum;
+
+      const options: WalletOption[] = [];
+
+      for (const c of candidateConnectors) {
+        let provider: unknown | undefined;
+        try {
+          provider = await c.getProvider();
+        } catch {
+          provider = undefined;
+        }
+
+        const connectable = !!provider;
+
+        // For Phantom, allow "detected" even if EVM is not enabled (so user sees it).
+        const detected =
+          connectable ||
+          (c.id === "phantom" ? phantomInstalled : false);
+
+        const notConnectableReason =
+          !connectable && c.id === "phantom" && phantomInstalled && !phantomEvmEnabled
+            ? "Phantom is installed, but its Ethereum/EVM provider is not enabled. Enable Ethereum in Phantom settings (or use Phantom's EVM mode) and refresh."
+            : !connectable
+              ? "Wallet provider not detected in this browser."
+              : undefined;
+
+        options.push({
+          id: c.id,
+          name: c.name,
+          connector: c,
+          detected,
+          connectable,
+          notConnectableReason
+        });
+      }
+
+      if (cancelled) return;
+      setWalletOptions(options.filter(o => o.detected));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectors.length]);
+
+  const walletLabel = (c: (typeof connectors)[number]) => {
+    if (c.id === "metaMask") return "MetaMask";
+    if (c.id === "phantom") return "Phantom";
+    return c.name;
+  };
 
   const handleConnect = async () => {
-    try {
-      await open();
-    } catch (err: unknown) {
-      // WalletConnect throws "Proposal expired" when the QR/session times out
-      // before the user approves — this is expected and not a real error.
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.toLowerCase().includes("proposal expired") ||
-          msg.toLowerCase().includes("session proposal") ||
-          msg.toLowerCase().includes("expired")) {
-        console.warn("WalletConnect session expired — user can try again.");
-        return;
-      }
-      console.error("Wallet connection error:", err);
+    // UX requirement: always show the installed-wallet list first.
+    // Only connect *after* the user explicitly picks a wallet.
+    setShowWalletPicker(true);
+  };
+
+  const handlePickWallet = (id: string) => {
+    const option = walletOptions.find(o => o.id === id);
+    if (!option?.connector) return;
+    if (!option.connectable) {
+      console.warn(option.notConnectableReason ?? "Wallet not connectable");
+      return;
     }
+
+    setShowWalletPicker(false);
+    connect({ connector: option.connector });
   };
 
   // Read persisted choice on mount (localStorage is browser-only)
@@ -309,6 +392,62 @@ export function Landing({ referralCode }: LandingProps) {
             <button onClick={handleConnect} className="genesis-btn">
               Connect Wallet &amp; Calculate Volume
             </button>
+
+            {/* Installed-wallet chooser (always opens first; user must pick explicitly) */}
+            <AnimatePresence>
+              {showWalletPicker && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  className="mt-3 mx-auto max-w-xs p-3 rounded-xl border border-white/10 bg-white/5"
+                >
+                  <div className="text-sm text-white/80 mb-2">Choose wallet</div>
+
+                  {walletOptions.length === 0 ? (
+                    <div className="text-sm text-white/60">
+                      No supported wallets detected in this browser.
+                      <br />
+                      Install/enable <span className="text-white/80">MetaMask</span> or <span className="text-white/80">Phantom (EVM)</span> and refresh.
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {walletOptions.map((o) => (
+                        <button
+                          key={o.id}
+                          onClick={() => handlePickWallet(o.id)}
+                          disabled={!o.connectable}
+                          className={
+                            "w-full text-left px-3 py-2 rounded-lg border border-white/10 " +
+                            (o.connectable
+                              ? "bg-black/30 hover:bg-black/40"
+                              : "bg-black/10 text-white/40 cursor-not-allowed")
+                          }
+                          style={{
+                            fontFamily:
+                              "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif",
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span>{o.id === "metaMask" ? "MetaMask" : o.id === "phantom" ? "Phantom" : o.name}</span>
+                            {!o.connectable && o.notConnectableReason && (
+                              <span className="text-xs mt-1 text-white/40">{o.notConnectableReason}</span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => setShowWalletPicker(false)}
+                    className="mt-2 text-xs text-white/60 hover:text-white/80"
+                  >
+                    Cancel
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* Info text — 2 lines */}

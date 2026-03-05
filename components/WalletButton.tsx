@@ -1,14 +1,12 @@
 "use client";
 
 import { useAccount, useDisconnect } from "wagmi";
-import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export function WalletButton() {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
-  const { open } = useWeb3Modal();
   const [showMenu, setShowMenu] = useState(false);
   // Prevent server/client mismatch — wallet state is only known on the client
   const [mounted, setMounted] = useState(false);

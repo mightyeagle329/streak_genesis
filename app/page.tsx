@@ -98,6 +98,17 @@ export default function Home() {
     }
   }, []);
 
+  // Dev UX: don't show any persisted referral banner when running locally.
+  // The referral code is persisted in localStorage to survive wallet redirects,
+  // which can be confusing during development.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      localStorage.removeItem("streak_referral");
+      setReferralCode(null);
+    }
+  }, []);
+
   // Handle wallet connection state changes
   useEffect(() => {
     if (isConnected && address && currentStep === "landing") {

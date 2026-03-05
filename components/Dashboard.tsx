@@ -326,7 +326,23 @@ export function Dashboard({ profile }: DashboardProps) {
             <div style={{ ...card, padding: "46px 24px 24px", position: "relative", width: "100%" }}>
               {/* X icon straddling top border */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/x.svg" alt="" aria-hidden="true" style={{ position: "absolute", top: 0, left: "50%", transform: "translate(-50%, -50%)", width: 54, height: 54, userSelect: "none" }} />
+              <img
+                src="/x.svg"
+                alt=""
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: 54,
+                  height: 54,
+                  userSelect: "none",
+                  // Ensure it renders above the card's background/blur layers.
+                  zIndex: 2,
+                  display: "block",
+                }}
+              />
               <p style={{ fontFamily: IBM, fontWeight: 700, fontSize: 20, lineHeight: "112%", color: "#FFFFFF", textAlign: "center", margin: "0 0 12px" }}>
                 Social Quest
               </p>

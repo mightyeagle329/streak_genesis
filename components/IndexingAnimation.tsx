@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
-import { useSignMessage } from "wagmi";
+import { useChainId, useSignMessage } from "wagmi";
 import { UserProfile } from "@/app/page";
 import { generateRefCode } from "@/lib/utils";
 
@@ -55,9 +55,7 @@ export function IndexingAnimation({
   const hasFetched = useRef(false);
 
   const { signMessageAsync } = useSignMessage();
-
-  // 🧪 TESTING: Always use test wallet for backend
-  const TEST_WALLET = "0x6a72f61820b26b1fe4d956e17b6dc2a1ea3033ee";
+  const chainId = useChainId();
 
   useEffect(() => {
     // Guard: refs survive the Strict Mode unmount/remount cycle,
@@ -76,16 +74,17 @@ export function IndexingAnimation({
       try {
         const timestamp = Date.now();
         const nonce = Math.random().toString(36).substring(2, 15);
-        const messageToSign = `Streak Genesis wants you to sign in with your Ethereum account:
-${TEST_WALLET}
 
-By signing this message, you prove ownership of your wallet address.
+        // Use a strict SIWE-style message format.
+        // Some wallets (notably Phantom) try to parse SIWE messages for a nicer UI and will
+        // error if the domain/format is invalid (e.g. contains spaces).
+        const domain = window.location.host;
+        const uri = window.location.origin;
+        const effectiveChainId = chainId || 137;
+        const issuedAt = new Date(timestamp).toISOString();
+        const statement = "By signing this message, you prove ownership of your wallet address.";
 
-URI: ${window.location.origin}
-Version: 1
-Chain ID: 137
-Nonce: ${nonce}
-Issued At: ${new Date(timestamp).toISOString()}`;
+        const messageToSign = `${domain} wants you to sign in with your Ethereum account:\n${walletAddress}\n\n${statement}\n\nURI: ${uri}\nVersion: 1\nChain ID: ${effectiveChainId}\nNonce: ${nonce}\nIssued At: ${issuedAt}`;
 
         setAuthStep("signing");
         const signature = await signMessageAsync({ message: messageToSign });
@@ -93,7 +92,7 @@ Issued At: ${new Date(timestamp).toISOString()}`;
 
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
         const requestBody: Record<string, unknown> = {
-          wallet_address: TEST_WALLET.toLowerCase(),
+          wallet_address: walletAddress.toLowerCase(),
           message: messageToSign,
           signature,
           timestamp,
@@ -131,7 +130,7 @@ Issued At: ${new Date(timestamp).toISOString()}`;
 
         setTimeout(() => {
           onCompleteRef.current({
-            wallet_address: TEST_WALLET.toLowerCase(),
+            wallet_address: walletAddress.toLowerCase(),
             user_type: data.user_type || "CHALLENGER",
             polymarket_volume_usd: data.polymarket_volume_usd || 0,
             genesis_xp: data.genesis_xp || 1000,
@@ -185,7 +184,7 @@ Issued At: ${new Date(timestamp).toISOString()}`;
   }, [walletAddress]);
 
   const IBM = "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif";
-  const shortTarget = `${TEST_WALLET.slice(0, 8)}... ${TEST_WALLET.slice(-4)}`;
+  const shortTarget = `${walletAddress.slice(0, 8)}... ${walletAddress.slice(-4)}`;
   const statusText = authStep === "signing"
     ? `Waiting for wallet signature${dots}`
     : `${scanningMessages[currentMessage]}${dots}`;
@@ -307,7 +306,7 @@ Issued At: ${new Date(timestamp).toISOString()}`;
 
             {/* TEST MODE */}
             <p style={{ fontFamily: IBM, fontWeight: 400, fontSize: 14, lineHeight: "112%", color: "#FBAC35", margin: 0 }}>
-              TEST MODE: Using demo wallet
+              Authenticating connected wallet
             </p>
 
             {/* Progress bar — 301 × 13, gradient border */}
