@@ -224,28 +224,13 @@ export function Landing({ referralCode }: LandingProps) {
             flexShrink: 0,
           }}
         >
-          {/* Circle 1 */}
-          <div
-            style={{
-              width: 17,
-              height: 17,
-              borderRadius: "50%",
-              background: "#FFFFFF",
-              border: "1px solid #0F0D3F",
-              flexShrink: 0,
-            }}
-          />
-          {/* Circle 2 — overlaps circle 1 by 8px (left: 45 - left: 36 = 9px gap → -8px margin) */}
-          <div
-            style={{
-              width: 17,
-              height: 17,
-              borderRadius: "50%",
-              background: "#FFFFFF",
-              border: "1px solid #0F0D3F",
-              flexShrink: 0,
-              marginLeft: -8,
-            }}
+          {/* Logo image */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt=""
+            aria-hidden="true"
+            style={{ width: 28, height: 26, flexShrink: 0 }}
           />
           {/* STREAK text — gap to left edge of text: 71 - (45+17) = 9px */}
           <span

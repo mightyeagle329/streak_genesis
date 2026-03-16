@@ -52,8 +52,8 @@ export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
       <div className="relative z-10 flex items-start justify-between">
         {/* STREAK logo */}
         <div style={{ paddingTop: 28, paddingLeft: 36, display: "flex", alignItems: "center" }}>
-          <div style={{ width: 17, height: 17, borderRadius: "50%", background: "#FFFFFF", border: "1px solid #0F0D3F", flexShrink: 0 }} />
-          <div style={{ width: 17, height: 17, borderRadius: "50%", background: "#FFFFFF", border: "1px solid #0F0D3F", flexShrink: 0, marginLeft: -8 }} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" aria-hidden="true" style={{ width: 28, height: 26, flexShrink: 0 }} />
           <span style={{ marginLeft: 9, fontFamily: IBM, fontWeight: 400, fontSize: 23, lineHeight: "26px", color: "#FFFFFF", whiteSpace: "nowrap" }}>
             STREAK
           </span>

@@ -217,8 +217,8 @@ export function IndexingAnimation({
 
       {/* Logo — top-left, same as Landing page */}
       <div className="absolute top-0 left-0 z-10" style={{ paddingTop: 28, paddingLeft: 36, display: "flex", alignItems: "center" }}>
-        <div style={{ width: 17, height: 17, borderRadius: "50%", background: "#FFFFFF", border: "1px solid #0F0D3F", flexShrink: 0 }} />
-        <div style={{ width: 17, height: 17, borderRadius: "50%", background: "#FFFFFF", border: "1px solid #0F0D3F", flexShrink: 0, marginLeft: -8 }} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" aria-hidden="true" style={{ width: 28, height: 26, flexShrink: 0 }} />
         <span style={{
           marginLeft: 9,
           fontFamily: "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif",
