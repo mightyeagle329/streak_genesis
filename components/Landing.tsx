@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useConnect } from "wagmi";
 
 interface LandingProps {
@@ -254,6 +255,22 @@ export function Landing({ referralCode }: LandingProps) {
 
         {/* Social links — hidden on mobile */}
         <div className="hidden md:flex items-center gap-3" style={{ paddingTop: 28, paddingRight: 32 }}>
+          <Link
+            href="/faq"
+            className="inline-flex items-center justify-center text-white/70 hover:text-white transition-all duration-200"
+            style={{
+              width: 23,
+              height: 15,
+              opacity: 1,
+              fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+              fontWeight: 400,
+              fontSize: 12,
+              lineHeight: "100%",
+              letterSpacing: "0%",
+            }}
+          >
+            FAQ
+          </Link>
           {SOCIAL_LINKS.map((s) => (
             <a
               key={s.label}
