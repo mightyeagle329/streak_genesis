@@ -131,6 +131,7 @@ export function IndexingAnimation({
         setTimeout(() => {
           onCompleteRef.current({
             wallet_address: walletAddress.toLowerCase(),
+            user_name: data.user_name,
             user_type: data.user_type || "CHALLENGER",
             polymarket_volume_usd: data.polymarket_volume_usd || 0,
             genesis_xp: data.genesis_xp || 1000,

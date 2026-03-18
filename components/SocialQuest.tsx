@@ -16,11 +16,19 @@ export function SocialQuest({ profile, onComplete }: SocialQuestProps) {
   const [error, setError] = useState("");
   const [showInput, setShowInput] = useState(false);
 
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/share/${profile.wallet_address}` +
+        `?xp=${encodeURIComponent(String(profile.total_xp))}` +
+        `&vol=${encodeURIComponent(String(profile.polymarket_volume_usd))}` +
+        `&name=${encodeURIComponent(profile.user_name || (profile.user_type === "VETERAN" ? "Veteran" : "Challenger"))}`
+      : `http://localhost:3000/share/${profile.wallet_address}`;
+
   const tweetText = profile.user_type === "VETERAN"
     ? `I traded ${formatVolume(profile.polymarket_volume_usd)} on Prediction Apps. Now I'm farming STREAK. ${
         profile.assigned_aura === "GOLDEN_FIRE" ? "GOD MODE Active. " : ""
-      }#Streak ${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${profile.ref_code}`
-    : `I'm skipping the legacy platforms. I just claimed my Early Pioneer Bonus on STREAK. #Streak ${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${profile.ref_code}`;
+      }#Streak ${shareUrl}`
+    : `I'm skipping the legacy platforms. I just claimed my Early Pioneer Bonus on STREAK. #Streak ${shareUrl}`;
 
   const handleTweet = () => {
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;

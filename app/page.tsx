@@ -13,6 +13,7 @@ import { WalletButton } from "@/components/WalletButton";
 
 export type UserProfile = {
   wallet_address: string;
+  user_name?: string;
   user_type: "VETERAN" | "CHALLENGER";
   polymarket_volume_usd: number;
   genesis_xp: number;

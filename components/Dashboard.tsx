@@ -18,15 +18,43 @@ export function Dashboard({ profile }: DashboardProps) {
   const [tweetError, setTweetError] = useState("");
   const [showRequirements, setShowRequirements] = useState(false);
 
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState(currentProfile.user_name ?? "");
+  const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
+  const [usernameError, setUsernameError] = useState("");
+
   const IBM = "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif";
   const isGodMode = currentProfile.assigned_aura === "GOLDEN_FIRE";
   const isOrangeFire = currentProfile.assigned_aura === "ORANGE_FIRE";
   const isVeteran = currentProfile.user_type === "VETERAN";
 
+  const totalXP =
+    currentProfile.total_xp ||
+    currentProfile.genesis_xp + currentProfile.alliance_xp + currentProfile.social_xp;
+
   const referralUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}?ref=${currentProfile.ref_code}`
       : `http://localhost:3000?ref=${currentProfile.ref_code}`;
+
+  const displayName = (currentProfile.user_name && currentProfile.user_name.trim().length > 0)
+    ? currentProfile.user_name.trim()
+    : `${currentProfile.wallet_address.slice(0, 6)}…${currentProfile.wallet_address.slice(-4)}`;
+
+  const shareName = displayName;
+
+  const publicSiteUrl =
+    (typeof window !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL)
+      ? process.env.NEXT_PUBLIC_SITE_URL
+      : (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${publicSiteUrl}/share/${currentProfile.wallet_address}` +
+        `?xp=${encodeURIComponent(String(totalXP))}` +
+        `&vol=${encodeURIComponent(String(currentProfile.polymarket_volume_usd))}` +
+        `&name=${encodeURIComponent(shareName)}`
+      : `http://localhost:3000/share/${currentProfile.wallet_address}`;
   const displayUrl =
     typeof window !== "undefined"
       ? `${window.location.host}?ref=${currentProfile.ref_code}`
@@ -38,11 +66,52 @@ export function Dashboard({ profile }: DashboardProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const validateUsername = (value: string): string | null => {
+    const v = value.trim();
+    if (v.length < 3 || v.length > 20) return "Username must be 3–20 characters";
+    if (!/^[a-zA-Z0-9_]+$/.test(v)) return "Only letters, numbers, and underscore are allowed";
+    return null;
+  };
+
+  const handleUsernameSave = async () => {
+    setUsernameError("");
+    const err = validateUsername(usernameDraft);
+    if (err) {
+      setUsernameError(err);
+      return;
+    }
+
+    setIsUpdatingUsername(true);
+    try {
+      const res = await fetch("/api/username", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wallet_address: currentProfile.wallet_address,
+          user_name: usernameDraft.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setUsernameError(data?.error || "Failed to update username");
+        return;
+      }
+
+      setCurrentProfile((p) => ({ ...p, user_name: usernameDraft.trim() }));
+      setIsEditingUsername(false);
+    } catch {
+      setUsernameError("Network error. Please try again.");
+    } finally {
+      setIsUpdatingUsername(false);
+    }
+  };
+
   const tweetText = isVeteran
     ? `I traded ${formatVolume(currentProfile.polymarket_volume_usd)} on Prediction Apps. Now I'm farming STREAK. ${
         isGodMode ? "GOD MODE Active. " : ""
-      }#Streak ${referralUrl}`
-    : `I'm skipping the legacy platforms. I just claimed my Early Pioneer Bonus on STREAK. #Streak ${referralUrl}`;
+      }#Streak ${shareUrl}`
+    : `I'm skipping the legacy platforms. I just claimed my Early Pioneer Bonus on STREAK. #Streak ${shareUrl}`;
 
   const handleTweet = () => {
     window.open(
@@ -97,10 +166,6 @@ export function Dashboard({ profile }: DashboardProps) {
     : isVeteran
     ? "Veteran Profile"
     : "Challenger Profile";
-
-  const totalXP =
-    currentProfile.total_xp ||
-    currentProfile.genesis_xp + currentProfile.alliance_xp + currentProfile.social_xp;
 
   const xpRows = [
     { label: "Genesis XP", value: `+ ${formatXP(currentProfile.genesis_xp)} XP` },
@@ -183,6 +248,95 @@ export function Dashboard({ profile }: DashboardProps) {
             <p style={{ fontFamily: IBM, fontWeight: 700, fontSize: 33, lineHeight: "112%", color: "#FBAC35", textAlign: "center", margin: "0 0 14px" }}>
               {formatXP(totalXP)} XP
             </p>
+
+            {/* Username (display) + edit */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+              {!isEditingUsername ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontFamily: IBM, fontWeight: 700, fontSize: 18, color: "#FFFFFF" }}>
+                    {displayName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUsernameError("");
+                      setUsernameDraft(currentProfile.user_name ?? "");
+                      setIsEditingUsername(true);
+                    }}
+                    style={{
+                      background: "rgba(255,255,255,0.10)",
+                      border: "1px solid rgba(255,255,255,0.18)",
+                      borderRadius: 10,
+                      padding: "6px 10px",
+                      cursor: "pointer",
+                      fontFamily: IBM,
+                      fontSize: 13,
+                      color: "rgba(255,255,255,0.85)",
+                    }}
+                  >
+                    Update username
+                  </button>
+                </div>
+              ) : (
+                <div style={{ width: "100%", maxWidth: 324, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div className="genesis-input-wrapper" style={{ width: "100%" }}>
+                    <input
+                      value={usernameDraft}
+                      onChange={(e) => setUsernameDraft(e.target.value)}
+                      placeholder="Your username"
+                      disabled={isUpdatingUsername}
+                      maxLength={20}
+                      style={{ fontFamily: IBM, fontSize: 13, opacity: isUpdatingUsername ? 0.6 : 1 }}
+                    />
+                  </div>
+
+                  {usernameError && (
+                    <p style={{ color: "#f87171", fontSize: 13, fontFamily: IBM, margin: 0, textAlign: "center" }}>
+                      {usernameError}
+                    </p>
+                  )}
+
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                    <button
+                      type="button"
+                      onClick={handleUsernameSave}
+                      disabled={isUpdatingUsername}
+                      className="genesis-btn"
+                      style={{ minWidth: 0, width: 160, opacity: isUpdatingUsername ? 0.6 : 1 }}
+                    >
+                      {isUpdatingUsername ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUsernameError("");
+                        setIsEditingUsername(false);
+                      }}
+                      style={{
+                        width: 120,
+                        height: 49,
+                        borderRadius: 60,
+                        border: "1px solid rgba(255,255,255,0.18)",
+                        background: "rgba(255,255,255,0.08)",
+                        cursor: "pointer",
+                        fontFamily: IBM,
+                        fontWeight: 600,
+                        fontSize: 15,
+                        color: "rgba(255,255,255,0.8)",
+                        opacity: isUpdatingUsername ? 0.6 : 1,
+                      }}
+                      disabled={isUpdatingUsername}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  <p style={{ margin: 0, fontFamily: IBM, fontSize: 12, textAlign: "center", opacity: 0.45 }}>
+                    3–20 chars, letters/numbers/underscore.
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Veteran + Rank pills */}
             <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
