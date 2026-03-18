@@ -302,7 +302,7 @@ export function Dashboard({ profile }: DashboardProps) {
                       onClick={handleUsernameSave}
                       disabled={isUpdatingUsername}
                       className="genesis-btn"
-                      style={{ minWidth: 0, width: 160, opacity: isUpdatingUsername ? 0.6 : 1 }}
+                      style={{ minWidth: 0, width: 120, height: 40, fontSize: 14, padding: "0 14px", opacity: isUpdatingUsername ? 0.6 : 1 }}
                     >
                       {isUpdatingUsername ? "Saving..." : "Save"}
                     </button>
@@ -313,15 +313,15 @@ export function Dashboard({ profile }: DashboardProps) {
                         setIsEditingUsername(false);
                       }}
                       style={{
-                        width: 120,
-                        height: 49,
-                        borderRadius: 60,
+                        width: 96,
+                        height: 40,
+                        borderRadius: 40,
                         border: "1px solid rgba(255,255,255,0.18)",
                         background: "rgba(255,255,255,0.08)",
                         cursor: "pointer",
                         fontFamily: IBM,
                         fontWeight: 600,
-                        fontSize: 15,
+                        fontSize: 14,
                         color: "rgba(255,255,255,0.8)",
                         opacity: isUpdatingUsername ? 0.6 : 1,
                       }}
