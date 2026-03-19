@@ -15,10 +15,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Username must be 3-20 characters" }, { status: 400 });
     }
     if (!/^[a-zA-Z0-9_]+$/.test(user_name)) {
-      return NextResponse.json({ error: "Username can only contain letters, numbers, and underscore" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Username can only contain letters, numbers, and underscore" },
+        { status: 400 }
+      );
     }
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
+    const backendUrl =
+      process.env.BACKEND_API_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_API_URL ||
+      "https://streak-api.duckdns.org";
+
     const upstream = await fetch(`${backendUrl}/v1/account/genesis/username`, {
       method: "PATCH",
       headers: {
@@ -26,7 +33,6 @@ export async function POST(req: Request) {
         Accept: "application/json",
       },
       body: JSON.stringify({ wallet_address, user_name }),
-      // Avoid caching at the edge
       cache: "no-store",
     });
 

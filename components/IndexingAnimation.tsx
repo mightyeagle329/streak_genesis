@@ -90,7 +90,8 @@ export function IndexingAnimation({
         const signature = await signMessageAsync({ message: messageToSign });
         setAuthStep("indexing");
 
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
+        // Use same-origin proxy to avoid mixed-content when the site is served over HTTPS (ngrok).
+        const backendUrl = "";
         const requestBody: Record<string, unknown> = {
           wallet_address: walletAddress.toLowerCase(),
           message: messageToSign,
@@ -108,7 +109,7 @@ export function IndexingAnimation({
         }
         console.log("📤 REQUEST:", JSON.stringify(requestBody, null, 2));
 
-        const response = await fetch(`${backendUrl}/v1/account/genesis`, {
+        const response = await fetch(`${backendUrl}/api/backend/v1/account/genesis`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Accept": "application/json" },
           body: JSON.stringify(requestBody),

@@ -59,7 +59,7 @@ export function VolumeReveal({ profile, onContinue }: VolumeRevealProps) {
           </span>
         </div>
 
-        {/* Wallet button is handled globally by Web3Modal */}
+        {/* Wallet button is handled globally by WalletButton */}
       </div>
 
       {/* Main content — all centered */}

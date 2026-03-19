@@ -11,29 +11,39 @@ type FaqItem = {
 
 const FAQS: FaqItem[] = [
   {
-    question: "What is Streak?",
+    question: "What is streak?",
     answer:
-      "Streak is a platform for trading bundled predictions on real-world outcomes. Combine markets, trade your conviction, or create your own thesis and earn when others trade it.",
+      "streak is a high-frequency, gamified prediction market built on solana. instead of slow, months-long political polls, we focus on ultra-fast 15-minute ai-curated markets, multi-leg parlays, and rewarding users for daily activity via an addictive \"swipe-to-farm\" interface.",
   },
   {
-    question: "What makes Streak different?",
+    question: "What makes streak different?",
     answer:
-      "Streak is designed around transparent reward mechanics and long-term alignment. Your activity builds compounding benefits over time through streak-based multipliers.",
+      "speed, liquidity, and gamification. legacy markets (like polymarket) use slow human oracles that lock your funds for days during disputes. our autonomous AI Judge integrates directly with premium APIs to resolve markets and pay out in seconds. plus, you aren't limited to single trades; you can bundle outcomes (parlays). above all, you don't just trade here—you farm XP, build streaks, and unlock visual auras.",
   },
   {
-    question: "When will Streak launch?",
+    question: "How is my genesis XP calculated?",
     answer:
-      "Genesis is the pre-launch phase. Phase 1 launch timing will be announced publicly. If you submit email verification, we’ll notify you when it’s live.",
+      "it's a vampire attack. connect your web3 wallet, and we securely index your historical trading volume from polygon CTF contracts. to protect the future airdrop pool for our native day-1 traders, legacy volume is bridged at a mathematically fair 10:1 Genesis Discount (max capped at $1,000,000 volume per wallet). Whales instantly unlock God Mode, skipping the 7-day grind.",
   },
   {
-    question: "How do I earn points?",
+    question: "What if i have $0 polymarket volume?",
     answer:
-      "You earn XP based on your verified prediction market volume and on-chain activity. You can also earn additional XP via referrals and social quests.",
+      "no history? perfect. you skipped the legacy platforms. you enter as a \"Challenger\" and get a flat 1,000 XP Welcome Bonus—as long as your wallet passes our strict Layer-1 EVM Sybil filter (min. $2 native balance or 1 mainnet tx). empty botnets are blocked at the door.",
+  },
+  {
+    question: "How do i earn points?",
+    answer:
+      "right now: connect your wallet for the genesis snapshot, submit your email, and share your alliance link.\n\nat launch: earn flat XP for every swipe, scale it with trading volume, get \"Rekt Relief\" XP even if you lose a bet, and multiply your entire stack by keeping your daily streak alive.",
+  },
+  {
+    question: "When will streak launch and is my airdrop guaranteed?",
+    answer:
+      "soon. but the game has already started. your genesis XP and auras are currently 🔒 PENDING. to officially unlock your airdrop allocation, you MUST make your first native trade (min. $10) on STREAK when we launch (Day-1). unclaimed allocations will be permanently burned. use it or lose it.",
   },
 ];
 
 export default function FaqPage() {
-  const [openIndex, setOpenIndex] = useState<number>(0);
+  const [openIndex, setOpenIndex] = useState<number>(-1);
   const IBM = "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif";
 
   return (
@@ -62,11 +72,10 @@ export default function FaqPage() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 flex items-start justify-between" style={{ paddingRight: 32 }}>
+      <header className="relative z-10 flex items-start justify-between px-6 md:px-8">
         <div
           style={{
             paddingTop: 28,
-            paddingLeft: 36,
             display: "flex",
             alignItems: "center",
             flexShrink: 0,
@@ -89,13 +98,14 @@ export default function FaqPage() {
           </span>
         </div>
 
-        <div className="hidden md:flex items-center" style={{ paddingTop: 28 }}>
+        {/* Back button (mobile + desktop) */}
+        <div className="flex items-center" style={{ paddingTop: 28 }}>
           <Link
             href="/"
             className="px-3 h-8 inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all duration-200 text-sm"
             style={{ fontFamily: IBM }}
           >
-            Back
+            <span aria-hidden="true" className="mr-1">←</span> Back
           </Link>
         </div>
       </header>
@@ -210,6 +220,7 @@ export default function FaqPage() {
                           lineHeight: "160%",
                           color: "rgba(255,255,255,0.55)",
                           maxWidth: 560,
+                          whiteSpace: "pre-line",
                         }}
                       >
                         {item.answer}
@@ -228,29 +239,29 @@ export default function FaqPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="relative z-10 hidden md:block"
+        className="relative z-10"
         style={{
-          paddingLeft: 36,
+          paddingLeft: 0,
           paddingBottom: 24,
           marginTop: "auto",
         }}
       >
-        <span
-          style={{
-            display: "inline-block",
-            width: 182,
-            height: 17,
-            fontFamily: IBM,
-            fontWeight: 400,
-            fontSize: 15,
-            lineHeight: "100%",
-            letterSpacing: "0%",
-            color: "#B2B2B2",
-            whiteSpace: "nowrap",
-          }}
-        >
-          © 2026 Streak. All rights reserved.
-        </span>
+        <div className="px-6" style={{ textAlign: "center" }}>
+          <span
+            style={{
+              display: "inline-block",
+              fontFamily: IBM,
+              fontWeight: 400,
+              fontSize: 12,
+              lineHeight: "100%",
+              letterSpacing: "0%",
+              color: "rgba(255,255,255,0.55)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            © 2026 Streak. All rights reserved.
+          </span>
+        </div>
       </motion.footer>
     </div>
   );

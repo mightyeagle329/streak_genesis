@@ -34,8 +34,7 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
     setIsSubmitting(true);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
-      const apiEndpoint = `${backendUrl}/v1/account/genesis/register`;
+      const apiEndpoint = `/api/backend/v1/account/genesis/register`;
       
       console.log("📤 Sending verification request to:", apiEndpoint);
       console.log("📤 Request body:", { email: email.trim() });
@@ -79,8 +78,7 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
     setIsSubmitting(true);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
-      const apiEndpoint = `${backendUrl}/v1/account/genesis/register/confirm`;
+      const apiEndpoint = `/api/backend/v1/account/genesis/register/confirm`;
       
       const requestBody = {
         email: email.trim(),
@@ -128,9 +126,8 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
     setIsSubmitting(true);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
-      const apiEndpoint = `${backendUrl}/v1/account/genesis/register`;
-      
+      const apiEndpoint = `/api/backend/v1/account/genesis/register`;
+
       console.log("📤 Resending verification code to:", apiEndpoint);
 
       const response = await fetch(apiEndpoint, {

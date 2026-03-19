@@ -55,8 +55,7 @@ export function SocialQuest({ profile, onComplete }: SocialQuestProps) {
     setIsSubmitting(true);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
-      const response = await fetch(`${backendUrl}/v1/account/genesis/social/tweet`, {
+      const response = await fetch(`/api/backend/v1/account/genesis/social/tweet`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

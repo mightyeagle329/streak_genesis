@@ -86,11 +86,10 @@ export function Landing({ referralCode }: LandingProps) {
 
   // We only support installed injected wallets, and we want *exactly one button per wallet*.
   // Build a stable candidate list (MetaMask, Phantom) by connector id.
-  const connectorById = new Map(connectors.map(c => [c.id, c] as const));
-  const candidateConnectors = [
-    connectorById.get("metaMask"),
-    connectorById.get("phantom"),
-  ].filter(Boolean) as typeof connectors;
+  const connectorById = new Map(connectors.map((c) => [c.id, c] as const));
+  const candidateConnectors = [connectorById.get("metaMask"), connectorById.get("phantom")].filter(
+    Boolean
+  ) as typeof connectors;
 
   // Only show wallets that are actually detected in the browser.
   // Note: Phantom can be installed without exposing an EVM provider. In that case we still show
@@ -145,12 +144,6 @@ export function Landing({ referralCode }: LandingProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectors.length]);
-
-  const walletLabel = (c: (typeof connectors)[number]) => {
-    if (c.id === "metaMask") return "MetaMask";
-    if (c.id === "phantom") return "Phantom";
-    return c.name;
-  };
 
   const handleConnect = async () => {
     // UX requirement: always show the installed-wallet list first.
@@ -211,20 +204,11 @@ export function Landing({ referralCode }: LandingProps) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 flex items-start justify-between"
-        style={{ paddingLeft: 0, paddingRight: 32, paddingTop: 0 }}
+        className="relative z-10 flex items-start justify-center md:justify-between px-6 md:px-8"
+        style={{ paddingTop: 0 }}
       >
         {/* Logo — flex row so circles + text sit on the same baseline */}
-        <div
-          style={{
-            paddingTop: 28,
-            paddingLeft: 36,
-            display: "flex",
-            alignItems: "center",
-            gap: 0,
-            flexShrink: 0,
-          }}
-        >
+        <div className="flex items-center gap-0 flex-shrink-0" style={{ paddingTop: 28 }}>
           {/* Logo image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -253,8 +237,8 @@ export function Landing({ referralCode }: LandingProps) {
           </span>
         </div>
 
-        {/* Social links — hidden on mobile */}
-        <div className="hidden md:flex items-center gap-3" style={{ paddingTop: 28, paddingRight: 32 }}>
+        {/* Desktop social links */}
+        <div className="hidden md:flex items-center gap-3" style={{ paddingTop: 28 }}>
           <Link
             href="/faq"
             className="inline-flex items-center justify-center text-white/70 hover:text-white transition-all duration-200"
@@ -476,6 +460,55 @@ export function Landing({ referralCode }: LandingProps) {
         </motion.div>
       </main>
 
+      {/* Footer — mobile */}
+      <motion.footer
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="relative z-10 md:hidden"
+        style={{ paddingBottom: 24 }}
+      >
+        <div className="px-6 flex items-center justify-center gap-3" style={{ paddingTop: 10 }}>
+          <Link
+            href="/faq"
+            className="text-[12px] text-white/60 hover:text-white/80"
+            style={{
+              fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+              lineHeight: "100%",
+            }}
+          >
+            FAQ
+          </Link>
+          {SOCIAL_LINKS.map((s) => (
+            <a
+              key={s.label}
+              href={s.href}
+              aria-label={s.label}
+              className="w-7 h-7 flex items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all duration-200"
+            >
+              {s.icon}
+            </a>
+          ))}
+        </div>
+
+        <div className="px-6" style={{ marginTop: 14, textAlign: "center" }}>
+          <span
+            style={{
+              display: "inline-block",
+              fontFamily: "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif",
+              fontWeight: 400,
+              fontSize: 12,
+              lineHeight: "100%",
+              letterSpacing: "0%",
+              color: "rgba(255,255,255,0.55)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            © 2026 Streak. All rights reserved.
+          </span>
+        </div>
+      </motion.footer>
+
       {/* Footer — desktop only */}
       <motion.footer
         initial={{ opacity: 0 }}
@@ -516,7 +549,7 @@ export function Landing({ referralCode }: LandingProps) {
             className="
               fixed z-[100] flex flex-col gap-3.5 bg-[#1E1E22] p-4
               shadow-[0_8px_32px_rgba(0,0,0,0.5)]
-              bottom-3 left-3 right-3 rounded-[14px]
+              bottom-24 left-3 right-3 rounded-[14px]
               md:bottom-6 md:right-6 md:left-auto md:w-[312px]
             "
           >

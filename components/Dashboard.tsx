@@ -18,6 +18,7 @@ export function Dashboard({ profile }: DashboardProps) {
   const [tweetError, setTweetError] = useState("");
   const [showRequirements, setShowRequirements] = useState(false);
 
+
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState(currentProfile.user_name ?? "");
   const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
@@ -66,6 +67,13 @@ export function Dashboard({ profile }: DashboardProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const publicBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+  const ogUrl =
+    `${publicBaseUrl.replace(/\/$/, "")}/api/og` +
+    `?name=${encodeURIComponent(displayName)}` +
+    `&xp=${encodeURIComponent(String(totalXP))}` +
+    `&vol=${encodeURIComponent(String(currentProfile.polymarket_volume_usd))}`;
+
   const validateUsername = (value: string): string | null => {
     const v = value.trim();
     if (v.length < 3 || v.length > 20) return "Username must be 3–20 characters";
@@ -110,8 +118,8 @@ export function Dashboard({ profile }: DashboardProps) {
   const tweetText = isVeteran
     ? `I traded ${formatVolume(currentProfile.polymarket_volume_usd)} on Prediction Apps. Now I'm farming STREAK. ${
         isGodMode ? "GOD MODE Active. " : ""
-      }#Streak ${shareUrl}`
-    : `I'm skipping the legacy platforms. I just claimed my Early Pioneer Bonus on STREAK. #Streak ${shareUrl}`;
+      }#Streak\nWallet: ${currentProfile.wallet_address}\n${shareUrl}`
+    : `I'm skipping the legacy platforms. I just claimed my Early Pioneer Bonus on STREAK. #Streak\nWallet: ${currentProfile.wallet_address}\n${shareUrl}`;
 
   const handleTweet = () => {
     window.open(
@@ -133,8 +141,7 @@ export function Dashboard({ profile }: DashboardProps) {
     }
     setIsSubmittingTweet(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://62.171.153.189:8080";
-      const response = await fetch(`${backendUrl}/v1/account/genesis/social/tweet`, {
+      const response = await fetch(`/api/backend/v1/account/genesis/social/tweet`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({ wallet_address: currentProfile.wallet_address, tweet_url: normalizedUrl }),
@@ -184,6 +191,7 @@ export function Dashboard({ profile }: DashboardProps) {
     WebkitBackdropFilter: "blur(20px)",
     boxSizing: "border-box",
   };
+
 
   return (
     <div className="min-h-screen relative flex flex-col" style={{ background: "#0A0B10" }}>
@@ -248,6 +256,23 @@ export function Dashboard({ profile }: DashboardProps) {
             <p style={{ fontFamily: IBM, fontWeight: 700, fontSize: 33, lineHeight: "112%", color: "#FBAC35", textAlign: "center", margin: "0 0 14px" }}>
               {formatXP(totalXP)} XP
             </p>
+
+            {/* Social quest completion indicator */}
+            {currentProfile.twitter_shared && currentProfile.social_xp > 0 && (
+              <p
+                style={{
+                  fontFamily: IBM,
+                  fontWeight: 400,
+                  fontSize: 13,
+                  lineHeight: "112%",
+                  color: "rgba(74,222,128,0.95)",
+                  textAlign: "center",
+                  margin: "-6px 0 14px",
+                }}
+              >
+                Social Quest verified: +{formatXP(currentProfile.social_xp)} XP
+              </p>
+            )}
 
             {/* Username (display) + edit */}
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>

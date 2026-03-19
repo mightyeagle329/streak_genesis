@@ -39,75 +39,27 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [sybilReason, setSybilReason] = useState<string | undefined>(undefined);
 
-  // Suppress known WalletConnect noise that propagates as unhandled rejections
+  // Capture referral code on mount.
+  // We persist it across redirects, BUT we never show it on localhost/dev.
   useEffect(() => {
-    const handler = (event: PromiseRejectionEvent) => {
-      const msg = event.reason instanceof Error
-        ? event.reason.message
-        : String(event.reason ?? "");
-      if (
-        msg.toLowerCase().includes("proposal expired") ||
-        msg.toLowerCase().includes("session proposal") ||
-        msg.toLowerCase().includes("no matching key") ||
-        msg.toLowerCase().includes("expired") && msg.toLowerCase().includes("wallet")
-      ) {
-        event.preventDefault();
-        console.warn("WalletConnect session expired — safely suppressed.");
-      }
-    };
-    window.addEventListener("unhandledrejection", handler);
-    return () => window.removeEventListener("unhandledrejection", handler);
-  }, []);
-
-  // Suppress WalletConnect "Proposal expired" unhandled rejections so they
-  // don't crash the UI — the user just needs to reconnect their wallet.
-  useEffect(() => {
-    const handler = (event: PromiseRejectionEvent) => {
-      const msg = (event.reason?.message ?? event.reason ?? "").toString().toLowerCase();
-      if (
-        msg.includes("proposal expired") ||
-        msg.includes("session proposal") ||
-        msg.includes("pairing expired") ||
-        msg.includes("failed to connect to metamask") ||
-        msg.includes("metamask") ||
-        msg.includes("user rejected") ||
-        msg.includes("user denied")
-      ) {
-        event.preventDefault();
-        console.warn("Wallet error (suppressed):", event.reason?.message ?? event.reason);
-      }
-    };
-    window.addEventListener("unhandledrejection", handler);
-    return () => window.removeEventListener("unhandledrejection", handler);
-  }, []);
-
-  // CRITICAL: Capture referral code on mount
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get("ref");
-    
-    if (ref) {
-      // Save to localStorage to survive Web3 wallet redirects
-      localStorage.setItem("streak_referral", ref);
-      setReferralCode(ref);
-    } else {
-      // Check if already stored
-      const stored = localStorage.getItem("streak_referral");
-      if (stored) {
-        setReferralCode(stored);
-      }
-    }
-  }, []);
-
-  // Dev UX: don't show any persisted referral banner when running locally.
-  // The referral code is persisted in localStorage to survive wallet redirects,
-  // which can be confusing during development.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+    if (isLocalhost) {
       localStorage.removeItem("streak_referral");
       setReferralCode(null);
+      return;
     }
+
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      localStorage.setItem("streak_referral", ref);
+      setReferralCode(ref);
+      return;
+    }
+
+    const stored = localStorage.getItem("streak_referral");
+    if (stored) setReferralCode(stored);
   }, []);
 
   // Handle wallet connection state changes

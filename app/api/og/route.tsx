@@ -50,7 +50,14 @@ export async function GET(req: Request) {
   // In Edge runtime we can't reliably read from the filesystem.
   // Fetch from public/ via absolute URL based on the current request.
   const origin = new URL(req.url).origin;
-  const logoData = await fetch(`${origin}/logo.png`).then((r) => r.arrayBuffer());
+  // In some environments (ngrok / proxies) fetch() can fail inside the OG edge renderer.
+  // Provide a safe fallback to an empty buffer so image generation still works.
+  let logoData: ArrayBuffer;
+  try {
+    logoData = await fetch(`${origin}/logo.png`).then((r) => r.arrayBuffer());
+  } catch {
+    logoData = new ArrayBuffer(0);
+  }
 
   // 1200x630 is the standard OG image size for Twitter summary_large_image.
   return new ImageResponse(
@@ -133,7 +140,11 @@ export async function GET(req: Request) {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logoData as any} alt="" width={44} height={44} style={{ borderRadius: 12 }} />
+            {logoData.byteLength > 0 ? (
+              <img src={logoData as any} alt="" width={44} height={44} style={{ borderRadius: 12 }} />
+            ) : (
+              <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", display: "flex" }} />
+            )}
             <div
               style={{
                 display: "flex",
@@ -183,15 +194,33 @@ export async function GET(req: Request) {
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={logoData as any}
-            alt=""
-            width={420}
-            height={420}
-            style={{
-              filter: "drop-shadow(0px 20px 80px rgba(0,0,0,0.55))",
-            }}
-          />
+          {logoData.byteLength > 0 ? (
+            <img
+              src={logoData as any}
+              alt=""
+              width={420}
+              height={420}
+              style={{
+                filter: "drop-shadow(0px 20px 80px rgba(0,0,0,0.55))",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 420,
+                height: 420,
+                borderRadius: 48,
+                backgroundColor: "rgba(255,255,255,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 42,
+                opacity: 0.55,
+              }}
+            >
+              STREAK
+            </div>
+          )}
         </div>
 
         {/* bottom-right brand */}
