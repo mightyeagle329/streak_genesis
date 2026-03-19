@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { useChainId, useSignMessage } from "wagmi";
 import { UserProfile } from "@/app/page";
-import { generateRefCode } from "@/lib/utils";
 
 // Keywords used to detect a Sybil rejection from the backend error body.
 // Adjust these once the backend developer confirms the exact error format.
@@ -129,23 +128,27 @@ export function IndexingAnimation({
         const data = await response.json();
         console.log("📊 Response:", JSON.stringify(data, null, 2));
 
+        // Backend may return either the profile directly OR nested under { profile: {...} }.
+        // We normalize here so the app reliably reads ref_code, etc.
+        const p: any = (data && (data.profile ?? data)) || {};
+
         setTimeout(() => {
           onCompleteRef.current({
             wallet_address: walletAddress.toLowerCase(),
-            user_name: data.user_name,
-            user_type: data.user_type || "CHALLENGER",
-            polymarket_volume_usd: data.polymarket_volume_usd || 0,
-            genesis_xp: data.genesis_xp || 1000,
-            alliance_xp: data.alliance_xp || 0,
-            social_xp: data.social_xp || 0,
-            total_xp: data.total_xp || data.genesis_xp || 1000,
-            is_xp_locked: data.is_xp_locked ?? true,
-            assigned_aura: data.assigned_aura || "GREY_BORDER",
-            assigned_rank: data.assigned_rank || "NOVICE",
-            ref_code: data.ref_code || "",
-            twitter_shared: data.twitter_shared || false,
+            user_name: p.user_name,
+            user_type: p.user_type || "CHALLENGER",
+            polymarket_volume_usd: p.polymarket_volume_usd || 0,
+            genesis_xp: p.genesis_xp || 1000,
+            alliance_xp: p.alliance_xp || 0,
+            social_xp: p.social_xp || 0,
+            total_xp: p.total_xp || p.genesis_xp || 1000,
+            is_xp_locked: p.is_xp_locked ?? true,
+            assigned_aura: p.assigned_aura || "GREY_BORDER",
+            assigned_rank: p.assigned_rank || "NOVICE",
+            ref_code: p.ref_code || "",
+            twitter_shared: p.twitter_shared || false,
             invited_by: referralCode || undefined,
-            email: data.email,
+            email: p.email,
           });
         }, 3000);
       } catch (error) {

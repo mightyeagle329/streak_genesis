@@ -106,10 +106,15 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
       const data = await response.json();
       console.log("✅ Email verified successfully:", data);
 
+      // Backend returns the updated profile (including ref_code) under `profile`.
+      const backendProfile: any = data?.profile ?? {};
+
       // Update profile with verified email
       const updatedProfile = {
         ...profile,
-        email: email.trim(),
+        // Prefer backend canonical values when provided
+        ...backendProfile,
+        email: backendProfile.email ?? email.trim(),
       };
 
       onComplete(updatedProfile);
