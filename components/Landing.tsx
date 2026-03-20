@@ -71,6 +71,50 @@ export function Landing({ referralCode }: LandingProps) {
   const [cookieChoice, setCookieChoice] = useState<string | null>(null);
   const [showWalletPicker, setShowWalletPicker] = useState(false);
 
+  const isMobileBrowser = () => {
+    if (typeof navigator === "undefined") return false;
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  };
+
+  const appStoreLinks = {
+    metamask: {
+      ios: "https://apps.apple.com/app/metamask-blockchain-wallet/id1438144202",
+      android: "https://play.google.com/store/apps/details?id=io.metamask",
+    },
+    phantom: {
+      ios: "https://apps.apple.com/us/app/phantom-crypto-wallet/id1598432977",
+      android: "https://play.google.com/store/apps/details?id=app.phantom",
+    },
+  };
+
+  const isIOS = () => {
+    if (typeof navigator === "undefined") return false;
+    return /iPad|iPhone|iPod/i.test(navigator.userAgent);
+  };
+
+  const isAndroid = () => {
+    if (typeof navigator === "undefined") return false;
+    return /Android/i.test(navigator.userAgent);
+  };
+
+  // Deep links to open the current site *inside* the wallet app's in-app browser.
+  // This is necessary for Safari / Telegram / in-app browsers where injected providers
+  // don't exist, but the user can still connect by opening the dapp inside the wallet.
+  const getWalletDeepLinks = () => {
+    if (typeof window === "undefined") {
+      return { metamask: "", phantom: "" };
+    }
+
+    // MetaMask expects URL without protocol after /dapp/
+    const noProto = window.location.href.replace(/^https?:\/\//, "");
+    const metamask = `https://metamask.app.link/dapp/${noProto}`;
+
+    // Phantom expects URL-encoded
+    const phantom = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
+
+    return { metamask, phantom };
+  };
+
   type WalletOption = {
     id: string;
     name: string;
@@ -394,7 +438,54 @@ export function Landing({ referralCode }: LandingProps) {
                     <div className="text-sm text-white/60">
                       No supported wallets detected in this browser.
                       <br />
-                      Install/enable <span className="text-white/80">MetaMask</span> or <span className="text-white/80">Phantom (EVM)</span> and refresh.
+                      {isMobileBrowser() ? (
+                        <>
+                          On mobile, wallets typically work via their in-app browser.
+                          <br />
+                          Open this site in a wallet app:
+                          <div className="mt-3 flex flex-col gap-2">
+                            <a
+                              href={getWalletDeepLinks().metamask}
+                              className="w-full px-3 py-2 rounded-lg border border-white/10 bg-black/30 hover:bg-black/40 text-white/85"
+                              style={{ fontFamily: "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif" }}
+                            >
+                              Open in MetaMask
+                            </a>
+                            <a
+                              href={getWalletDeepLinks().phantom}
+                              className="w-full px-3 py-2 rounded-lg border border-white/10 bg-black/30 hover:bg-black/40 text-white/85"
+                              style={{ fontFamily: "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif" }}
+                            >
+                              Open in Phantom
+                            </a>
+
+                            {(isIOS() || isAndroid()) && (
+                              <div className="mt-2 text-xs text-white/50">
+                                Don&apos;t have a wallet yet?
+                                <div className="mt-1 flex flex-col gap-1">
+                                  <a
+                                    href={isIOS() ? appStoreLinks.metamask.ios : appStoreLinks.metamask.android}
+                                    className="underline"
+                                  >
+                                    Download MetaMask
+                                  </a>
+                                  <a
+                                    href={isIOS() ? appStoreLinks.phantom.ios : appStoreLinks.phantom.android}
+                                    className="underline"
+                                  >
+                                    Download Phantom
+                                  </a>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          Install/enable <span className="text-white/80">MetaMask</span> or{" "}
+                          <span className="text-white/80">Phantom (EVM)</span> and refresh.
+                        </>
+                      )}
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">

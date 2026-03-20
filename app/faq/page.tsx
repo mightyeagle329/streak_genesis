@@ -73,12 +73,17 @@ export default function FaqPage() {
 
       {/* Header */}
       <header className="relative z-10 flex items-start justify-between px-6 md:px-8">
-        <div
+        {/* Logo (acts as Home link) */}
+        <Link
+          href="/"
+          aria-label="Go to home"
+          className="inline-flex"
           style={{
             paddingTop: 28,
             display: "flex",
             alignItems: "center",
             flexShrink: 0,
+            textDecoration: "none",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -96,18 +101,10 @@ export default function FaqPage() {
           >
             STREAK
           </span>
-        </div>
+        </Link>
 
-        {/* Back button (mobile + desktop) */}
-        <div className="flex items-center" style={{ paddingTop: 28 }}>
-          <Link
-            href="/"
-            className="px-3 h-8 inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all duration-200 text-sm"
-            style={{ fontFamily: IBM }}
-          >
-            <span aria-hidden="true" className="mr-1">←</span> Back
-          </Link>
-        </div>
+        {/* Right side intentionally empty (logo is the back/home affordance) */}
+        <div style={{ width: 1, height: 1 }} />
       </header>
 
       {/* Content */}
