@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import Link from "next/link";
 import { UserProfile } from "@/app/page";
 import { formatXP, formatVolume } from "@/lib/utils";
 
@@ -209,11 +210,16 @@ export function Dashboard({ profile }: DashboardProps) {
       </div>
 
       {/* ── STREAK logo ────────────────────────────────────────────────── */}
-      <div className="relative z-10" style={{ paddingTop: 28, paddingLeft: 36, display: "flex", alignItems: "center", flexShrink: 0 }}>
+      <Link
+        href="/"
+        aria-label="Go to home"
+        className="relative z-10 inline-flex"
+        style={{ paddingTop: 28, paddingLeft: 36, display: "flex", alignItems: "center", flexShrink: 0, textDecoration: "none" }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="" aria-hidden="true" style={{ width: 28, height: 26, flexShrink: 0 }} />
         <span style={{ marginLeft: 9, fontFamily: IBM, fontWeight: 400, fontSize: 23, lineHeight: "26px", color: "#FFFFFF", whiteSpace: "nowrap" }}>STREAK</span>
-      </div>
+      </Link>
 
       {/* ── Scrollable content ─────────────────────────────────────────── */}
       <div className="relative z-10 flex flex-col items-center px-4 pb-16" style={{ paddingTop: 32 }}>

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "Terms of Service | Streak Genesis",
 };
@@ -5,27 +7,27 @@ export const metadata = {
 export default function TermsPage() {
   return (
     <main style={{ maxWidth: 820, margin: "0 auto", padding: "28px 20px 48px", color: "#fff" }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 18 }}>
-        <a
-          href="/"
+      {/* Header logo -> Home */}
+      <Link
+        href="/"
+        aria-label="Go to home"
+        style={{ display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none", marginBottom: 18 }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" aria-hidden="true" style={{ width: 28, height: 26, flexShrink: 0 }} />
+        <span
           style={{
-            padding: "0 12px",
-            height: 32,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 999,
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(255,255,255,0.05)",
-            color: "rgba(255,255,255,0.75)",
-            textDecoration: "none",
             fontFamily: "var(--font-ibm-condensed), 'IBM Plex Sans Condensed', sans-serif",
-            fontSize: 14,
+            fontWeight: 400,
+            fontSize: 23,
+            lineHeight: "26px",
+            color: "#FFFFFF",
+            whiteSpace: "nowrap",
           }}
         >
-          ← Back
-        </a>
-      </div>
+          STREAK
+        </span>
+      </Link>
 
       <h1 style={{ fontSize: 32, marginBottom: 12, lineHeight: "110%" }}>Terms of Service</h1>
       <p style={{ opacity: 0.8, lineHeight: 1.6 }}>

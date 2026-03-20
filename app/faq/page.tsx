@@ -231,17 +231,13 @@ export default function FaqPage() {
         </div>
       </section>
 
-      {/* Footer — same style/behavior as Landing */}
+      {/* Footer — match Landing (mobile centered small; desktop left aligned) */}
       <motion.footer
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="relative z-10"
-        style={{
-          paddingLeft: 0,
-          paddingBottom: 24,
-          marginTop: "auto",
-        }}
+        className="relative z-10 md:hidden"
+        style={{ paddingBottom: 24, marginTop: "auto" }}
       >
         <div className="px-6" style={{ textAlign: "center" }}>
           <span
@@ -259,6 +255,31 @@ export default function FaqPage() {
             © 2026 Streak. All rights reserved.
           </span>
         </div>
+      </motion.footer>
+
+      <motion.footer
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="relative z-10 hidden md:block"
+        style={{ paddingLeft: 36, paddingBottom: 24, marginTop: "auto" }}
+      >
+        <span
+          style={{
+            display: "inline-block",
+            width: 182,
+            height: 17,
+            fontFamily: IBM,
+            fontWeight: 400,
+            fontSize: 15,
+            lineHeight: "100%",
+            letterSpacing: "0%",
+            color: "#B2B2B2",
+            whiteSpace: "nowrap",
+          }}
+        >
+          © 2026 Streak. All rights reserved.
+        </span>
       </motion.footer>
     </div>
   );

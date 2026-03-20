@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import Link from "next/link";
 import { UserProfile } from "@/app/page";
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
@@ -176,11 +177,16 @@ export function EmailGate({ profile, onComplete }: EmailGateProps) {
       </div>
 
       {/* STREAK logo */}
-      <div className="relative z-10" style={{ paddingTop: 28, paddingLeft: 36, display: "flex", alignItems: "center" }}>
+      <Link
+        href="/"
+        aria-label="Go to home"
+        className="relative z-10 inline-flex"
+        style={{ paddingTop: 28, paddingLeft: 36, display: "flex", alignItems: "center", textDecoration: "none" }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="" aria-hidden="true" style={{ width: 28, height: 26, flexShrink: 0 }} />
         <span style={{ marginLeft: 9, fontFamily: IBM, fontWeight: 400, fontSize: 23, lineHeight: "26px", color: "#FFFFFF", whiteSpace: "nowrap" }}>STREAK</span>
-      </div>
+      </Link>
 
       {/* Main content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4">

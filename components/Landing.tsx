@@ -252,7 +252,12 @@ export function Landing({ referralCode }: LandingProps) {
         style={{ paddingTop: 0 }}
       >
         {/* Logo — flex row so circles + text sit on the same baseline */}
-        <div className="flex items-center gap-0 flex-shrink-0" style={{ paddingTop: 28 }}>
+        <Link
+          href="/"
+          aria-label="Go to home"
+          className="flex items-center gap-0 flex-shrink-0"
+          style={{ paddingTop: 28, textDecoration: "none" }}
+        >
           {/* Logo image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -279,7 +284,7 @@ export function Landing({ referralCode }: LandingProps) {
           >
             STREAK
           </span>
-        </div>
+        </Link>
 
         {/* Desktop social links */}
         <div className="hidden md:flex items-center gap-3" style={{ paddingTop: 28 }}>
