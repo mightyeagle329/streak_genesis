@@ -47,17 +47,12 @@ export async function GET(req: Request) {
       hour12: false,
     });
 
-  // In Edge runtime we can't reliably read from the filesystem.
-  // Fetch from public/ via absolute URL based on the current request.
   const origin = new URL(req.url).origin;
-  // In some environments (ngrok / proxies) fetch() can fail inside the OG edge renderer.
-  // Provide a safe fallback to an empty buffer so image generation still works.
-  let logoData: ArrayBuffer;
-  try {
-    logoData = await fetch(`${origin}/logo.png`).then((r) => r.arrayBuffer());
-  } catch {
-    logoData = new ArrayBuffer(0);
-  }
+
+  const [logoData, tweetBgData] = await Promise.all([
+    fetch(`${origin}/logo.png`).then((r) => r.arrayBuffer()).catch(() => new ArrayBuffer(0)),
+    fetch(`${origin}/tweet.png`).then((r) => r.arrayBuffer()).catch(() => new ArrayBuffer(0)),
+  ]);
 
   // 1200x630 is the standard OG image size for Twitter summary_large_image.
   return new ImageResponse(
@@ -67,59 +62,59 @@ export async function GET(req: Request) {
           width: "1200px",
           height: "630px",
           display: "flex",
-          // @vercel/og's CSS parser can be strict about gradients/background shorthands.
-          // Use a solid base color and add glow layers with absolutely-positioned divs.
           backgroundColor: "#070A12",
           color: "white",
           position: "relative",
           fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+          overflow: "hidden",
         }}
       >
-        {/* Glow layers */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            overflow: "hidden",
-            display: "flex",
-          }}
-        >
-          <div
+        {/* tweet.png background */}
+        {tweetBgData.byteLength > 0 ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={tweetBgData as any}
+            alt=""
+            width={1200}
+            height={630}
             style={{
               position: "absolute",
-              width: 820,
-              height: 820,
-              right: -240,
-              top: -220,
-              backgroundColor: "rgba(40,90,255,0.35)",
-              filter: "blur(140px)",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
             }}
           />
-          <div
-            style={{
-              position: "absolute",
-              width: 820,
-              height: 820,
-              left: -260,
-              bottom: -260,
-              backgroundColor: "rgba(255,140,0,0.30)",
-              filter: "blur(140px)",
-            }}
-          />
-        </div>
+        ) : (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                width: 820,
+                height: 820,
+                right: -240,
+                top: -220,
+                backgroundColor: "rgba(40,90,255,0.35)",
+                filter: "blur(140px)",
+                display: "flex",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                width: 820,
+                height: 820,
+                left: -260,
+                bottom: -260,
+                backgroundColor: "rgba(255,140,0,0.30)",
+                filter: "blur(140px)",
+                display: "flex",
+              }}
+            />
+          </>
+        )}
 
-        {/* subtle overlay */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            // Keep overlay simple to avoid CSS parsing issues.
-            backgroundColor: "rgba(255,255,255,0.04)",
-            opacity: 0.7,
-          }}
-        />
-
-        {/* Left glass card */}
+        {/* Values overlay */}
         <div
           style={{
             position: "absolute",
@@ -129,8 +124,7 @@ export async function GET(req: Request) {
             width: 520,
             borderRadius: 36,
             border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(10, 12, 22, 0.55)",
-            backdropFilter: "blur(16px)",
+            background: "rgba(10, 12, 22, 0.60)",
             padding: 40,
             display: "flex",
             flexDirection: "column",
@@ -158,7 +152,6 @@ export async function GET(req: Request) {
             </div>
           </div>
 
-          {/* @vercel/og requires explicit display:flex on containers with multiple children */}
           <div style={{ marginTop: 12, display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", fontSize: 22, opacity: 0.75, marginBottom: 8 }}>Points earned:</div>
             <div style={{ display: "flex", fontSize: 78, fontWeight: 800, letterSpacing: "-0.03em", color: "#FBAC35" }}>
